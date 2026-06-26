@@ -1,0 +1,4 @@
+jdbc.url=jdbc:mysql://127.0.0.1:3306/travel_agency?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+jdbc.user=root
+# TODO: 改成你本机 MySQL 的 root 密码
+jdbc.password=你的密码

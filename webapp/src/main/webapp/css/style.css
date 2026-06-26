@@ -1,0 +1,30 @@
+body{font-family:"Microsoft YaHei",sans-serif;margin:0;background:#f4f6f9;color:#333}
+h2{margin:18px 0 10px}
+h3{margin:8px 0}
+a{color:#1a6fc9;text-decoration:none}
+a:hover{text-decoration:underline}
+.nav{background:#23425f;padding:10px 20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap}
+.nav a{color:#fff;font-size:15px}
+.nav .who{margin-left:auto;color:#cfe2f5;font-size:13px}
+.main{max-width:1100px;margin:0 auto;padding:0 16px 40px}
+.ok{background:#e6f7e6;border:1px solid #7fc97f;color:#1d6b1d;padding:8px 14px;margin:12px 0;border-radius:4px}
+.bad{background:#fdeaea;border:1px solid #e58a8a;color:#a02020;padding:8px 14px;margin:12px 0;border-radius:4px}
+table{border-collapse:collapse;width:100%;background:#fff;margin:10px 0 24px;font-size:14px}
+th,td{border:1px solid #d6dde5;padding:6px 10px;text-align:left}
+th{background:#eaf1f8}
+tr:nth-child(even){background:#f8fafc}
+.card{background:#fff;border:1px solid #d6dde5;border-radius:6px;padding:14px 18px;margin:12px 0}
+.card input,.card select{margin:4px 10px 4px 2px;padding:5px 8px;border:1px solid #bbb;border-radius:4px}
+.card button,.bar button{background:#1a6fc9;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer}
+.bar{margin:10px 0}
+.bar input{padding:5px 8px;border:1px solid #bbb;border-radius:4px}
+.empty{color:#888}
+.login-wrap{display:flex;justify-content:center;align-items:center;height:100vh}
+.login-box{background:#fff;border:1px solid #d6dde5;border-radius:8px;padding:34px 40px;width:320px;box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.login-box h1{font-size:20px;text-align:center;margin:0 0 22px;color:#23425f}
+.login-box input{width:100%;box-sizing:border-box;margin:8px 0;padding:9px 10px;border:1px solid #bbb;border-radius:4px}
+.login-box button{width:100%;margin-top:14px;background:#23425f;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;font-size:15px}
+.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}
+.menu-grid a{display:block;background:#fff;border:1px solid #d6dde5;border-radius:8px;padding:26px 18px;text-align:center;font-size:16px}
+.menu-grid a:hover{border-color:#1a6fc9;text-decoration:none;box-shadow:0 2px 10px rgba(26,111,201,.15)}
+.menu-grid small{display:block;color:#888;margin-top:8px;font-size:12px}

@@ -1,0 +1,29 @@
+# === 隐私/个人 ===
+reports/
+*.docx
+*.pdf
+
+# === 配置文件（含密码） ===
+db.properties
+
+# === IDE ===
+.idea/workspace.xml
+
+# === 构建输出 ===
+target/
+tomcat.8080/
+tomcat.8090/
+
+# === 运行时日志 ===
+server_output.log
+server_error.log
+*.log
+
+# === 临时文件 ===
+*.bak
+*.tmp
+*~
+.DS_Store
+
+# === 技能文档（个人配置） ===
+技能调度规范.md
