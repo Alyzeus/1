@@ -9,7 +9,7 @@
 
 | 层 Layer | 技术 Technology | 说明 Description |
 |----------|---------------|-----------------|
-| 前端 Frontend | HTML5 + CSS3 + JS SPA | 单页应用（~150KB），20 页面模块，零第三方框架 / 20 page modules, zero third-party frameworks |
+| 前端 Frontend | HTML5 + CSS3 + JS SPA | 单页应用（~170KB），20 页面模块，零第三方框架，中英双语 / 20 page modules, zero third-party frameworks, full zh/en i18n |
 | 控制层 Controller | Java Servlet 3.0 (9) | LoginServlet、**ApiServlet**(统一 REST JSON API / unified REST JSON API) 等 |
 | 数据层 Data | JDBC (DBUtil) + MySQL 8.0 | 连接管理 + JSON 序列化 + 异常翻译 / connection mgmt + JSON serialization + error translation |
 | 安全 Security | AuthFilter (web.xml) + SHA2-256 | 登录校验 + Cache-Control + RBAC / login check + Cache-Control + RBAC |
@@ -26,7 +26,22 @@
 - **团体投保 / Insurance** — 投保表单 + 回执 / form + receipt
 - **团费结算 / Settlement** — 统计卡片 + 费用明细
 - **查询统计 / Statistics** — SVG 图表(柱状/折线/饼图) + 月历排班 + 进度条 + 排行榜 + CSV 导出
-- **全局 / Global** — Ripple 水波纹、模态框、Toast、表单校验 shake+✓、侧边栏折叠
+- **全局 / Global** — Ripple 水波纹、模态框、Toast、表单校验 shake+✓、侧边栏折叠、中英双语一键切换
+- **国际化 / I18N** — 230+ 翻译键覆盖全部 20 页面，localStorage 持久化语言偏好，`refreshAllUI()` 即时切换
+
+## 国际化 / Internationalization (I18N)
+
+系统支持中英双语一键切换，覆盖全部 20 个页面。  
+The system supports one-click zh/EN toggle across all 20 pages.
+
+| 特性 Feature | 说明 Description |
+|-------------|-----------------|
+| I18N 引擎 | `I18N` 字典（230+ keys）+ `t()` 翻译函数 + `{0}` 参数插值 |
+| 语言切换 | 右上角 `EN`/`中` 按钮 + `localStorage` 持久化 |
+| 即时刷新 | `setLang()` → `refreshAllUI()` 强制重渲所有可见元素 |
+| 覆盖范围 | 登录页、导航、仪表盘、CRUD（6页）、报名向导、入团退团、成团校验、导游分配、宾馆安排、投保、结算、查询统计（5页）、模态框、Toast、按钮状态 |
+| 状态翻译 | `sBadge()` 映射中文状态 → I18N key → 英文显示 |
+| 数据分离 | 业务数据（姓名、线路名等）保留原文，不做翻译 |
 
 ## 文件结构 / File Structure
 
@@ -60,7 +75,7 @@ E:\mysql2\
 │       ├── resources/
 │       │   └── db.properties.example   # 配置模板 / config template
 │       └── webapp/
-│           ├── index.html              # SPA 主页面 (~150KB)
+│           ├── index.html              # SPA 主页面 (~175KB), 含 230+ I18N keys / incl. 230+ i18n keys
 │           ├── css/
 │           └── WEB-INF/web.xml
 ```
@@ -183,3 +198,6 @@ Browser SPA (index.html)
 - SPA 20 页面正常渲染 / All 20 pages render correctly
 - 全部交互特性通过 / All features verified (wizard, drag-drop, SVG charts, calendar, skeleton, etc.)
 - 数据库全部可执行 / DB objects: 11 tables + 5 views + 5 procedures + 9 triggers
+- **中英双语 / I18N**：230+ keys，262 处 `t()` 调用，19/19 页面 zh↔en 切换通过 / All 19 pages pass zh↔en toggle
+- 循环引用：已排查消除 / Circular `t()` references: eliminated
+- 变量遮蔽：`itemHtml`/`move` 中 `t` 参数重命名为 `tr` / Variable shadowing: fixed

@@ -644,7 +644,7 @@ tbody tr.row-in{opacity:0;transform:translateY(10px);animation:rowIn .35s var(--
         <label>用户名<span class="req">*</span></label>
         <div class="input-wrap">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg>
-          <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+          <input type="text" id="username" placeholder=t('val_enter_username') autocomplete="username">
           <span class="check">✓</span>
         </div>
         <div class="msg">请输入用户名</div>
@@ -654,7 +654,7 @@ tbody tr.row-in{opacity:0;transform:translateY(10px);animation:rowIn .35s var(--
         <label>密码<span class="req">*</span></label>
         <div class="input-wrap">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-          <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password">
+          <input type="password" id="password" placeholder=t('val_enter_password') autocomplete="current-password">
           <span class="check">✓</span>
         </div>
         <div class="msg">请输入密码</div>
@@ -701,8 +701,9 @@ tbody tr.row-in{opacity:0;transform:translateY(10px);animation:rowIn .35s var(--
       <button id="collapseBtn" title="折叠/展开侧边栏">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
       </button>
-      <div class="breadcrumb" id="breadcrumb">首页 / <b>工作台</b></div>
+      <div class="breadcrumb" id="breadcrumb"></div>
       <div class="topbar-right">
+        <button id="langToggle" title="中/EN" style="background:var(--primary-light);border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--primary);cursor:pointer;transition:background .18s" onclick="setLang(LANG==='zh'?'en':'zh')">EN</button>
         <span class="badge badge-green live"><span class="dot"></span>系统运行中</span>
         <div class="user-chip" id="userChip" title="点击退出登录">
           <div class="avatar">管</div>
@@ -732,6 +733,393 @@ const $  = (s, p=document) => p.querySelector(s);
 const $$ = (s, p=document) => [...p.querySelectorAll(s)];
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+/* ============================================================
+   I18N 国际化引擎
+============================================================ */
+const I18N = {
+appTitle:{zh:"旅行社旅游管理系统",en:"Travel Agency Management System"},
+appBrand:{zh:"旅行社管理",en:"Travel Agency"},
+appSub:{zh:"TRAVEL AGENCY MANAGEMENT",en:"TRAVEL AGENCY MANAGEMENT"},
+runningBadge:{zh:"系统运行中",en:"System Running"},
+logoutTip:{zh:"点击退出登录",en:"Click to logout"},
+collapseTip:{zh:"折叠/展开侧边栏",en:"Collapse/Expand Sidebar"},
+nav_workbench:{zh:"工作台",en:"Workbench"},
+nav_sysadmin:{zh:"系统管理",en:"System Admin"},
+nav_basic:{zh:"基础信息管理",en:"Basic Info"},
+nav_registration:{zh:"报名组团",en:"Registration & Groups"},
+nav_dispatch:{zh:"调度管理",en:"Dispatch"},
+nav_insurance:{zh:"保险结算",en:"Insurance & Settlement"},
+nav_stats:{zh:"查询统计",en:"Statistics"},
+menu_dashboard:{zh:"系统首页",en:"Dashboard"},
+menu_users:{zh:"用户管理",en:"Users"},
+menu_routes:{zh:"线路管理",en:"Routes"},
+menu_batches:{zh:"班次管理",en:"Batches"},
+menu_guides:{zh:"导游档案",en:"Guides"},
+menu_hotels:{zh:"宾馆档案",en:"Hotels"},
+menu_signup:{zh:"游客报名",en:"Tourist Signup"},
+menu_tourists:{zh:"游客档案",en:"Tourist Records"},
+menu_createGroup:{zh:"创建旅游团",en:"Create Group"},
+menu_joinQuit:{zh:"入团 / 退团",en:"Join / Quit"},
+menu_groupCheck:{zh:"成团校验",en:"Group Check"},
+menu_guideAssign:{zh:"导游随团安排",en:"Guide Assignment"},
+menu_hotelAssign:{zh:"宾馆住宿安排",en:"Hotel Assignment"},
+menu_insurance:{zh:"团体投保",en:"Group Insurance"},
+menu_settlement:{zh:"团费结算",en:"Settlement"},
+menu_qBatch:{zh:"按线路查班次",en:"Batch Query"},
+menu_qMembers:{zh:"团员名单查询",en:"Member Roster"},
+menu_qGuide:{zh:"导游排班查询",en:"Guide Schedule"},
+menu_qHotel:{zh:"宾馆接待查询",en:"Hotel Reception"},
+menu_qIncome:{zh:"收入统计",en:"Income Stats"},
+dash_title:{zh:"工作台",en:"Dashboard"},
+dash_welcome:{zh:"欢迎回来",en:"Welcome back"},
+dash_signups:{zh:"本月报名人数",en:"Monthly Signups"},
+dash_inGroup:{zh:"在团游客",en:"Tourists in Groups"},
+dash_activeGroups:{zh:"进行中团次",en:"Active Groups"},
+dash_income:{zh:"本月收入(万元)",en:"Monthly Revenue (10k)"},
+dash_records:{zh:"最新报名记录",en:"Latest Registrations"},
+dash_search:{zh:"搜索姓名 / 线路 / 班次...",en:"Search name/route/batch..."},
+dash_allStatus:{zh:"全部状态",en:"All Statuses"},
+dash_formed:{zh:"已成团",en:"Formed"},
+dash_pending:{zh:"未成团",en:"Pending"},
+dash_disbanded:{zh:"已解散",en:"Disbanded"},
+dash_addBtn:{zh:"＋ 新增报名",en:"+ New Registration"},
+dash_signups_unit:{zh:"人",en:""},
+dash_inGroup_unit:{zh:"人",en:""},
+dash_activeGroups_unit:{zh:"个",en:""},
+dash_income_prefix:{zh:"¥ ",en:"¥ "},
+role_admin:{zh:"管理员",en:"Admin"},
+crud_view:{zh:"查看",en:"View"},
+crud_edit:{zh:"编辑",en:"Edit"},
+crud_delete:{zh:"删除",en:"Delete"},
+crud_noResult:{zh:"未找到匹配记录",en:"No matching records"},
+crud_records:{zh:"共 {0} 条记录，第 {1}/{2} 页",en:"{0} records, page {1}/{2}"},
+form_add:{zh:"新增",en:"Add"},
+form_edit:{zh:"编辑",en:"Edit"},
+form_submit:{zh:"提 交",en:"Submit"},
+crud_actions:{zh:"操作",en:"Actions"},
+crud_add:{zh:"新增{0}",en:"Add {0}"},
+filter_all:{zh:"{0}（全部）",en:"{0} (All)"},
+ph_select:{zh:"请选择{0}",en:"Select {0}"},
+ph_enter:{zh:"请输入{0}",en:"Enter {0}"},
+ph_under_construction:{zh:"{0}页面待实现",en:"{0} page coming soon"},
+ph_uc_desc:{zh:"布局框架与设计风格确认后，将按计划逐页交付此模块。",en:"This module will be delivered as planned."},
+joinQuit_waitEmpty:{zh:"暂无待分配游客",en:"No pending tourists"},
+joinQuit_inEmpty:{zh:"暂无团员，从左侧拖入",en:"No members, drag from left"},
+joinQuit_join:{zh:"入团 →",en:"Join →"},
+joinQuit_quit:{zh:"← 退团",en:"← Quit"},
+joinQuit_idTail:{zh:"证件尾号",en:"ID tail"},
+joinQuit_joined:{zh:"{0} 已加入「{1}」",en:"{0} joined 「{1}」"},
+joinQuit_quitToast:{zh:"{0} 已退团",en:"{0} left the group"},
+ga_unassigned:{zh:"未分配",en:"Unassigned"},
+ga_selGuide:{zh:"请选择导游",en:"Select guide"},
+ga_assign:{zh:"分 配",en:"Assign"},
+ga_cannotAssign:{zh:"未成团暂不可分配",en:"Cannot assign until formed"},
+ga_assigned:{zh:"已为「{0}」分配导游 {1}",en:"Assigned {1} to 「{0}」"},
+signup_selRoute:{zh:"① 选择旅游线路",en:"① Select Route"},
+signup_selTourist:{zh:"② 填写游客信息",en:"② Fill Tourist Info"},
+signup_confirm:{zh:"③ 确认报名信息",en:"③ Confirm"},
+signup_pickRoute:{zh:"请先选择旅游线路",en:"Please select a route first"},
+signup_pickBatch:{zh:"请选择出发班次",en:"Please select a departure batch"},
+signup_name:{zh:"游客姓名",en:"Name"},
+signup_idcard:{zh:"身份证号",en:"ID Card"},
+signup_phone:{zh:"联系电话",en:"Phone"},
+signup_realName:{zh:"请输入真实姓名",en:"Enter real name"},
+signup_idHint:{zh:"18 位身份证号码",en:"18-digit ID number"},
+signup_idErr:{zh:"请输入 18 位身份证号",en:"Enter 18-digit ID"},
+signup_phoneHint:{zh:"11 位手机号",en:"11-digit phone number"},
+signup_phoneErr:{zh:"请输入 11 位手机号",en:"Enter 11-digit phone"},
+signup_receipt:{zh:"✈ 报名回执单",en:"✈ Registration Receipt"},
+signup_receiptId:{zh:"报名编号",en:"Registration ID"},
+signup_receiptNote:{zh:"请妥善保存报名编号，出团前 3 天将以短信通知集合信息。",en:"Save the ID. SMS will be sent 3 days before departure."},
+signup_again:{zh:"＋ 再报一单",en:"+ New Registration"},
+signup_kv_route:{zh:"旅游线路",en:"Route"},
+signup_kv_batch:{zh:"出发班次",en:"Batch"},
+signup_kv_name:{zh:"游客姓名",en:"Name"},
+signup_kv_id:{zh:"身份证号",en:"ID Card"},
+signup_kv_phone:{zh:"联系电话",en:"Phone"},
+signup_kv_fee:{zh:"应缴团费",en:"Tour Fee"},
+signup_kv_depart:{zh:"出发日期",en:"Departure"},
+signup_kv_status:{zh:"报名状态",en:"Status"},
+signup_kv_departSuffix:{zh:"出发",en:"Departure"},
+signup_perPerson:{zh:"/人",en:"/person"},
+ha_title:{zh:"宾馆住宿安排",en:"Hotel Assignment"},
+ha_desc:{zh:"按团安排入住宾馆：选择团 → 挑选宾馆 → 填写房间数 → 提交订房单",en:"Assign hotels by group: Select → Pick → Rooms → Submit"},
+ha_group:{zh:"选择旅游团",en:"Select Group"},
+ha_hotel:{zh:"选择宾馆",en:"Select Hotel"},
+ha_rooms:{zh:"房间数",en:"Rooms"},
+ha_submit:{zh:"提交订房单",en:"Submit Booking"},
+ha_booked:{zh:"已为「{0}」预订 {1}，{2} 间房",en:"Booked {1}, {2} rooms for 「{0}」"},
+is_title:{zh:"团体投保",en:"Group Insurance"},
+is_desc:{zh:"为已成团办理团体旅游保险",en:"Insurance for formed groups"},
+is_insure:{zh:"办理投保",en:"Insure"},
+is_insured:{zh:"已为「{0}」办理团体保险",en:"Insured 「{0}」"},
+st_title:{zh:"团费结算",en:"Settlement"},
+st_desc:{zh:"按团汇总费用并执行结算",en:"Summarize & settle group fees"},
+st_settle:{zh:"确认结算",en:"Settle"},
+st_settled:{zh:"已为「{0}」完成结算",en:"Settled 「{0}」"},
+st_fee:{zh:"团费",en:"Tour Fee"},
+st_insuranceFee:{zh:"保险费",en:"Insurance Fee"},
+st_total:{zh:"合计",en:"Total"},
+export_csv:{zh:"导出 CSV",en:"Export CSV"},
+cg_title:{zh:"创建旅游团",en:"Create Group"},
+cg_desc:{zh:"填写团基本信息，并从所选班次的已报名游客中勾选首批团员",en:"Fill group info, select initial members from batch"},
+cg_name:{zh:"团名",en:"Group Name"},
+cg_nameHint:{zh:"如：桂林欢乐7团",en:"e.g. Guilin Happy Group 7"},
+cg_nameMsg:{zh:"请输入团名",en:"Enter group name"},
+cg_batch:{zh:"所属班次",en:"Batch"},
+cg_selBatch:{zh:"请选择班次",en:"Select batch"},
+cg_selBatchMsg:{zh:"请选择所属班次",en:"Please select a batch"},
+cg_date:{zh:"出发日期",en:"Departure Date"},
+cg_selDate:{zh:"请选择出发日期",en:"Select departure date"},
+cg_create:{zh:"创建旅游团",en:"Create Group"},
+cg_noCandidate:{zh:"该班次暂无「已报名」待组团的游客",en:"No registered tourists in this batch"},
+cg_pickHint:{zh:"勾选首批团员（已报名 {0} 人）",en:"Select initial members ({0} registered)"},
+cg_pickMin:{zh:"请至少勾选 1 名团员",en:"Select at least 1 member"},
+cg_created:{zh:"旅游团「{0}」创建成功，已纳入 {1} 名团员",en:"Group 「{0}」created with {1} members"},
+cg_resetHint:{zh:"选择班次后，将列出该班次下处于「已报名」状态的游客",en:"Select a batch to list registered tourists"},
+jq_title:{zh:"入团 / 退团操作",en:"Join / Quit Group"},
+jq_desc:{zh:"左侧为该团所属班次中待分配的游客，右侧为已入团名单；支持拖拽或按钮操作",en:"Left: pending tourists. Right: current members. Drag & drop or click."},
+jq_selGroup:{zh:"选择旅游团：",en:"Select Group:"},
+jq_dragHint:{zh:"💡 拖动卡片到另一侧，或点击卡片上的按钮",en:"💡 Drag cards or click buttons to move"},
+gc_title:{zh:"成团校验",en:"Group Check"},
+gc_desc:{zh:"成团规则：20~50 人。检查各团是否满足出团条件",en:"Rule: 20-50 members. Verify group readiness."},
+qb_title:{zh:"按线路查班次",en:"Batch Query"},
+qb_desc:{zh:"选择线路，查看全部班次",en:"Select route, view all batches"},
+qb_selRoute:{zh:"请选择线路：",en:"Select Route:"},
+qb_noBatch:{zh:"该线路暂无班次",en:"No batches for this route"},
+qm_title:{zh:"团员名单查询",en:"Member Roster"},
+qm_desc:{zh:"按团名/班次/日期检索团员",en:"Search members by group/batch/date"},
+qg_title:{zh:"导游排班查询",en:"Guide Schedule"},
+qg_desc:{zh:"日历视图展示导游排班",en:"Calendar view of guide schedules"},
+qh_title:{zh:"宾馆接待查询",en:"Hotel Reception"},
+qh_desc:{zh:"按时间段/宾馆名查询",en:"Search by date range/hotel"},
+qi_title:{zh:"收入统计",en:"Income Stats"},
+qi_desc:{zh:"经营收入仪表盘",en:"Revenue dashboard"},
+modal_defaultOk:{zh:"确 认",en:"OK"},
+modal_defaultCancel:{zh:"取 消",en:"Cancel"},
+del_title:{zh:"删除确认",en:"Confirm Delete"},
+del_confirm:{zh:"确认删除",en:"Confirm Delete"},
+del_msg1:{zh:"确定要删除",en:"Are you sure to delete"},
+del_msg2:{zh:"此操作不可恢复，请谨慎操作。",en:"This cannot be undone."},
+del_toast:{zh:"已删除：{0}",en:"Deleted: {0}"},
+logout_title:{zh:"退出登录",en:"Logout"},
+logout_msg:{zh:"确定要退出当前账号",en:"Are you sure to logout"},
+logout_btn:{zh:"退出",en:"Logout"},
+role_sysadmin:{zh:"系统管理员",en:"System Admin"},
+nav_workbench_name:{zh:"工作台",en:"Workbench"},
+nav_sysadmin_name:{zh:"系统管理",en:"System Admin"},
+nav_basic_name:{zh:"基础信息管理",en:"Basic Info"},
+nav_registration_name:{zh:"报名组团",en:"Registration & Groups"},
+nav_dispatch_name:{zh:"调度管理",en:"Dispatch"},
+nav_insurance_name:{zh:"保险结算",en:"Insurance & Settlement"},
+nav_stats_name:{zh:"查询统计",en:"Statistics"},
+login_pageTitle:{zh:"旅行社旅游管理系统",en:"Travel Agency Management System"},
+login_pageSub:{zh:"TRAVEL AGENCY MANAGEMENT",en:"TRAVEL AGENCY MANAGEMENT"},
+login_formUser:{zh:"用户名",en:"Username"},
+login_formPass:{zh:"密码",en:"Password"},
+login_formCaptcha:{zh:"验证码",en:"CAPTCHA"},
+login_ph_captcha:{zh:"不区分大小写",en:"Case insensitive"},
+login_captchaTitle:{zh:"点击刷新验证码",en:"Click to refresh CAPTCHA"},
+login_valCaptcha:{zh:"验证码错误",en:"CAPTCHA mismatch"},
+app_brand:{zh:"旅行社管理",en:"Travel Agency"},
+topbar_running:{zh:"系统运行中",en:"System Running"},
+topbar_logout:{zh:"点击退出登录",en:"Click to logout"},
+topbar_collapse:{zh:"折叠/展开侧边栏",en:"Collapse/Expand Sidebar"},
+lang_toggle:{zh:"中/EN",en:"中/EN"},
+gc_run:{zh:"⚡ 一键成团校验",en:"⚡ Batch Check"},
+gc_pass:{zh:"校验通过，可发团",en:"Passed, ready to depart"},
+gc_fail:{zh:"人数不足，暂不可发团",en:"Insufficient members, cannot depart yet"},
+gc_summary:{zh:"校验完成：{0} 个团达标，{1} 个团人数不足",en:"Check done: {0} passed, {1} failed"},
+gc_toast:{zh:"校验完成：{0} 个达标 / {1} 个不足",en:"Check done: {0} passed / {1} failed"},
+gc_needMore:{zh:"还差 {0} 人成团",en:"Need {0} more"},
+gc_enough:{zh:"已达成团人数",en:"Sufficient members"},
+qb_list:{zh:"班次列表（{0} 个）",en:"Batch list ({0})"},
+qb_colNo:{zh:"班次号",en:"Batch No"},
+qb_colDate:{zh:"出发日期",en:"Departure"},
+qb_colCount:{zh:"报名人数",en:"Signups"},
+qb_colStatus:{zh:"状态",en:"Status"},
+qb_trend:{zh:"报名人数趋势",en:"Signup Trend"},
+qm_export:{zh:"⬇ 导出表格",en:"⬇ Export"},
+qm_colName:{zh:"姓名",en:"Name"},
+qm_colId:{zh:"身份证号",en:"ID Card"},
+qm_colPhone:{zh:"联系方式",en:"Phone"},
+qm_colGroup:{zh:"所属团",en:"Group"},
+qm_colBatch:{zh:"班次",en:"Batch"},
+qm_colDepart:{zh:"出发日期",en:"Departure"},
+qm_colStatus:{zh:"状态",en:"Status"},
+qm_noResult:{zh:"未找到符合条件的团员",en:"No matching members"},
+qm_count:{zh:"共查询到 {0} 名团员",en:"Found {0} members"},
+qm_emptyExport:{zh:"当前结果为空，无可导出数据",en:"No data to export"},
+qm_exported:{zh:"已导出 {0} 条团员记录",en:"Exported {0} records"},
+qh_colHotel:{zh:"宾馆名称",en:"Hotel Name"},
+qh_colGroup:{zh:"接待团队",en:"Group"},
+qh_colCheckin:{zh:"入住日期",en:"Check-in"},
+qh_colCheckout:{zh:"离店日期",en:"Check-out"},
+qh_colRooms:{zh:"房间数",en:"Rooms"},
+qh_colRate:{zh:"入住率",en:"Occupancy"},
+qi_totalIncome:{zh:"总收入",en:"Total Revenue"},
+qi_avgPerGroup:{zh:"团均收入",en:"Avg per Group"},
+qi_routeIncome:{zh:"各线路收入排行",en:"Revenue by Route"},
+qi_groupTop:{zh:"创收 Top 5 团次",en:"Top 5 Groups"},
+qi_monthly:{zh:"月度收入走势",en:"Monthly Revenue Trend"},
+breadcrumb_home:{zh:"首页",en:"Home"},
+captcha_error:{zh:"验证码错误",en:"CAPTCHA mismatch"},
+cal_prev:{zh:"‹ 上月",en:"‹ Prev"},
+cal_next:{zh:"下月 ›",en:"Next ›"},
+cal_weekDays:{zh:["周日","周一","周二","周三","周四","周五","周六"],en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]},
+cal_today:{zh:"今天",en:"Today"},
+cal_more:{zh:"+{0} 个排班",en:"+{0} more"},
+cal_noSchedule:{zh:"当日无导游排班 🏖",en:"No guide schedules today 🏖"},
+cal_title:{zh:"{0} 导游排班",en:"{0} Guide Schedule"},
+qh_noResult:{zh:"该时间段无接待记录",en:"No reception records in this period"},
+qh_info:{zh:"共 {0} 条接待记录，平均入住率 {1}%",en:"{0} records, avg occupancy {1}%"},
+qi_totalLabel:{zh:"上半年累计收入（万元）",en:"H1 Total Revenue (10k)"},
+qi_avgLabel:{zh:"月均收入（万元）",en:"Monthly Avg (10k)"},
+qi_monthLabel:{zh:"本月收入（万元）",en:"This Month (10k)"},
+qi_yoyLabel:{zh:"同比增长（%）",en:"YoY Growth (%)"},
+qi_monthlyTitle:{zh:"月度收入（万元）",en:"Monthly Revenue (10k)"},
+qi_pieTitle:{zh:"线路收入占比",en:"Revenue Share by Route"},
+qi_rankTitle:{zh:"班次收入排行榜 TOP 5",en:"Top 5 Batches by Revenue"},
+insurance_amtUnit:{zh:"万元 / 人",en:"10k/person"},
+route_title:{zh:"线路管理",en:"Route Management"},
+route_desc:{zh:"维护旅游线路：编号、行程天数、主要景点与报价",en:"Manage routes: code, duration, attractions & pricing"},
+route_code:{zh:"线路编号",en:"Route Code"},
+route_name:{zh:"线路名称",en:"Route Name"},
+route_days:{zh:"天数",en:"Days"},
+route_spots:{zh:"主要景点",en:"Main Attractions"},
+route_price:{zh:"报价",en:"Price"},
+status_onSale:{zh:"在售",en:"On Sale"},
+status_offSale:{zh:"下架",en:"Off Sale"},
+status_formed:{zh:"已成团",en:"Formed"},
+status_pending:{zh:"未成团",en:"Pending"},
+status_disbanded:{zh:"已解散",en:"Disbanded"},
+status_active:{zh:"启用",en:"Active"},
+status_disabled:{zh:"停用",en:"Disabled"},
+status_free:{zh:"空闲",en:"Free"},
+status_busy:{zh:"带团中",en:"On Tour"},
+status_vacation:{zh:"休假",en:"On Leave"},
+status_registered:{zh:"已报名",en:"Registered"},
+status_joined:{zh:"已入团",en:"Joined"},
+status_quit:{zh:"已退团",en:"Quit"},
+status_insured:{zh:"已投保",en:"Insured"},
+status_uninsured:{zh:"未投保",en:"Uninsured"},
+status_paid:{zh:"已收",en:"Paid"},
+status_unpaid:{zh:"待收",en:"Pending"},
+wiz_step1:{zh:"选择线路/班次",en:"Select Route/Batch"},
+wiz_step2:{zh:"填写游客信息",en:"Fill Tourist Info"},
+wiz_step3:{zh:"确认提交",en:"Confirm & Submit"},
+wiz_next:{zh:"下一步 ›",en:"Next ›"},
+wiz_back:{zh:"‹ 上一步",en:"‹ Back"},
+wiz_submit:{zh:"确认提交报名",en:"Confirm & Submit"},
+signup_title:{zh:"游客报名",en:"Tourist Signup"},
+signup_desc:{zh:"分三步完成报名：选择线路/班次 → 填写游客信息 → 确认提交",en:"Complete in 3 steps: Select → Fill → Confirm"},
+login_title:{zh:"旅行社旅游管理系统",en:"Travel Agency Management System"},
+login_subtitle:{zh:"TRAVEL AGENCY MANAGEMENT",en:"TRAVEL AGENCY MANAGEMENT"},
+login_username:{zh:"用户名",en:"Username"},
+login_password:{zh:"密码",en:"Password"},
+login_captcha:{zh:"验证码",en:"CAPTCHA"},
+login_ph_user:{zh:"请输入用户名",en:"Enter username"},
+login_ph_pass:{zh:"请输入密码",en:"Enter password"},
+login_ph_cap:{zh:"不区分大小写",en:"Case insensitive"},
+login_btn:{zh:"登 录",en:"Login"},
+login_foot:{zh:"演示账号",en:"Demo accounts"},
+login_req:{zh:"*",en:"*"},
+modal_ok:{zh:"确 认",en:"OK"},
+modal_cancel:{zh:"取 消",en:"Cancel"},
+modal_delete:{zh:"删除确认",en:"Confirm Delete"},
+modal_deleteMsg1:{zh:"确定要删除",en:"Are you sure to delete"},
+modal_deleteMsg2:{zh:"此操作不可恢复，请谨慎操作。",en:"This cannot be undone."},
+modal_confirmDel:{zh:"确认删除",en:"Confirm Delete"},
+modal_logout:{zh:"退出登录",en:"Logout"},
+modal_logoutMsg:{zh:"确定要退出当前账号",en:"Are you sure to logout"},
+modal_logoutBtn:{zh:"退出",en:"Logout"},
+toast_saved:{zh:"保存成功",en:"Saved"},
+toast_deleted:{zh:"已删除：",en:"Deleted: "},
+toast_error:{zh:"服务器连接失败",en:"Server connection failed"},
+toast_login_ok:{zh:"登录成功，欢迎！",en:"Login successful, welcome!"},
+toast_login_err:{zh:"用户名或密码错误",en:"Invalid credentials"},
+val_enter_username:{zh:"请输入用户名",en:"Enter username"},
+val_enter_password:{zh:"请输入密码",en:"Enter password"},
+val_captcha:{zh:"验证码不匹配，请重试",en:"CAPTCHA mismatch, retry"},
+val_enter_captcha:{zh:"请输入验证码",en:"Enter CAPTCHA"},
+btn_loading:{zh:"处理中...",en:"Processing..."},
+btn_deleting:{zh:"删除中...",en:"Deleting..."},
+btn_logging:{zh:"登录中...",en:"Logging in..."},
+btn_creating:{zh:"创建中...",en:"Creating..."},
+btn_checking:{zh:"校验中...",en:"Checking..."},
+btn_settling:{zh:"结算中...",en:"Settling..."},
+btn_exporting:{zh:"导出中...",en:"Exporting..."},
+batch_title:{zh:"班次管理",en:"Batch Management"},
+batch_desc:{zh:"按线路开设出团班次，跟踪报名人数",en:"Manage tour batches by route"},
+guide_title:{zh:"导游档案",en:"Guide Records"},
+guide_desc:{zh:"导游人事档案：等级评定、联系方式",en:"Guide profiles: ratings & contacts"},
+hotel_title:{zh:"宾馆档案",en:"Hotel Records"},
+hotel_desc:{zh:"合作宾馆档案：房型、协议价",en:"Hotel profiles: room types & rates"},
+tourist_title:{zh:"游客档案",en:"Tourist Records"},
+tourist_desc:{zh:"游客基础档案与报名状态维护",en:"Tourist profiles & registration status"},
+users_title:{zh:"用户管理",en:"User Management"},
+users_desc:{zh:"管理系统登录账号、角色权限",en:"Manage accounts & role permissions"},
+group_title:{zh:"创建旅游团",en:"Create Group"},
+group_desc:{zh:"填写团基本信息，勾选首批团员",en:"Fill group info, select initial members"},
+joinQuit_title:{zh:"入团 / 退团操作",en:"Join / Quit Group"},
+joinQuit_desc:{zh:"支持拖拽或按钮操作",en:"Drag & drop or button actions"},
+groupCheck_title:{zh:"成团校验",en:"Group Check"},
+groupCheck_desc:{zh:"成团规则：20~50 人",en:"Rule: 20-50 members per group"},
+guideAssign_title:{zh:"导游随团安排",en:"Guide Assignment"},
+guideAssign_desc:{zh:"为各团次分配随团导游",en:"Assign guides to groups"},
+hotelAssign_title:{zh:"宾馆住宿安排",en:"Hotel Assignment"},
+hotelAssign_desc:{zh:"按团安排入住宾馆",en:"Arrange hotel stays by group"},
+insurance_title:{zh:"团体投保",en:"Group Insurance"},
+insurance_desc:{zh:"为已成团办理团体旅游保险",en:"Insurance for formed groups"},
+settlement_title:{zh:"团费结算",en:"Settlement"},
+settlement_desc:{zh:"按团汇总费用并执行结算",en:"Summarize & settle group fees"},
+qBatch_title:{zh:"按线路查班次",en:"Batch Query"},
+qBatch_desc:{zh:"选择线路，查看全部班次",en:"Select route, view all batches"},
+qMembers_title:{zh:"团员名单查询",en:"Member Roster"},
+qMembers_desc:{zh:"按团名/班次/日期检索团员",en:"Search members by group/batch/date"},
+qGuide_title:{zh:"导游排班查询",en:"Guide Schedule"},
+qGuide_desc:{zh:"日历视图展示导游排班",en:"Calendar view of guide schedules"},
+qHotel_title:{zh:"宾馆接待查询",en:"Hotel Reception"},
+qHotel_desc:{zh:"按时间段/宾馆名查询",en:"Search by date range/hotel"},
+qIncome_title:{zh:"收入统计",en:"Income Stats"},
+qIncome_desc:{zh:"经营收入仪表盘",en:"Revenue dashboard"},
+};
+function t(key,...args){
+  let s = (I18N[key] && I18N[key][LANG]) ? I18N[key][LANG] : (I18N[key]?.zh || key);
+  args.forEach((a,i)=>s=s.replace('{'+i+'}',a));
+  return s;
+}
+let LANG = (localStorage.getItem('lang')||(navigator.language||'').split('-')[0]);
+
+function setLang(l){LANG=l==='en'?'en':l==='zh'?'zh':(LANG==='zh'?'en':'zh');localStorage.setItem('lang',LANG);refreshAllUI();}
+function refreshLoginUI(){
+  document.title = t('appTitle');
+  const lt=document.querySelector('.login-title'); if(lt) lt.textContent=t('login_title');
+  const ls=document.querySelector('.login-sub'); if(ls) ls.textContent=t('login_subtitle');
+  const lf=document.querySelector('.login-foot'); if(lf) lf.innerHTML=t('login_foot')+': <b>admin</b> / <b>business</b> / <b>dispatch</b>';
+  const lb=$("#loginBtn"); if(lb) lb.innerHTML=t('login_btn');
+  const uu=$("#fUser label"); if(uu) uu.innerHTML=t('login_username')+'<span class="req">'+t('login_req')+'</span>';
+  const pp=$("#fPass label"); if(pp) pp.innerHTML=t('login_password')+'<span class="req">'+t('login_req')+'</span>';
+  const cc=$("#fCode label"); if(cc) cc.innerHTML=t('login_captcha')+'<span class="req">'+t('login_req')+'</span>';
+  const un=$("#username"); if(un) un.placeholder=t('login_ph_user');
+  const pw=$("#password"); if(pw) pw.placeholder=t('login_ph_pass');
+  const cp=$("#captchaInput"); if(cp) cp.placeholder=t('login_ph_cap');
+  const captchaCanvas=document.querySelector('#captchaCanvas'); if(captchaCanvas) captchaCanvas.title=t('login_captchaTitle');
+}
+function refreshAllUI(){
+  buildRoleNav();
+  if(currentPage) { const p = currentPage; currentPage = null; navigate(p); }
+  refreshLoginUI();
+  const badge=document.querySelector('#topbar .badge'); if(badge) badge.innerHTML='<span class="dot"></span>'+t('runningBadge');
+  const collapse=$("#collapseBtn"); if(collapse) collapse.title=t('collapseTip');
+  const lt=$("#langToggle"); if(lt) lt.textContent=LANG==='zh'?'EN':'中';
+  const brand=document.querySelector('#appShell .brand b'); if(brand) brand.textContent=t('appBrand');
+  const userChip=document.querySelector('#userChip'); if(userChip && LANG==='en') userChip.title=t('logoutTip');
+}
+LANG = LANG === 'en' ? 'en' : 'zh';
+// 首次加载时应用语言设置（登录页 + 应用壳）
+document.addEventListener('DOMContentLoaded', () => { refreshLoginUI(); if(LANG==='en') refreshAllUI(); });
+
 /* ripple 水波纹（事件委托，作用于所有 .btn） */
 document.addEventListener("pointerdown", e => {
   const btn = e.target.closest(".btn");
@@ -746,7 +1134,7 @@ document.addEventListener("pointerdown", e => {
 });
 
 /* 按钮 loading 状态 */
-function setBtnLoading(btn, on, textWhile="处理中...") {
+function setBtnLoading(btn, on, textWhile) { if (!textWhile) textWhile = t('btn_loading');
   if (on) {
     btn.dataset.html = btn.innerHTML;
     btn.classList.add("loading");
@@ -775,13 +1163,14 @@ function toast(msg, type="success", dur=2200) {
 const modalRoot = $("#modalRoot"), modalBox = $("#modalBox");
 let modalOnOk = null;
 
-function openModal({title, body, okText="确 认", danger=false, onOk=null, hideFoot=false}) {
+function openModal({title, body, okText, danger=false, onOk=null, hideFoot=false}) {
+  if (!okText) okText = t('modal_defaultOk');
   modalOnOk = onOk;
   modalBox.innerHTML = `
     <div class="modal-head"><h3>${title}</h3><button class="modal-close" data-close>✕</button></div>
     <div class="modal-body">${body}</div>
     ${hideFoot ? "" : `<div class="modal-foot">
-      <button class="btn btn-ghost" data-close>取 消</button>
+      <button class="btn btn-ghost" data-close>${t('modal_defaultCancel')}</button>
       <button class="btn ${danger ? "btn-danger" : "btn-primary"}" id="modalOkBtn">${okText}</button>
     </div>`}`;
   modalRoot.classList.add("open");
@@ -805,13 +1194,13 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && modalRoot.
 
 function confirmDelete(name, after) {
   openModal({
-    title: "删除确认", danger: true, okText: "确认删除",
+    title: t('del_title'), danger: true, okText: t('del_confirm'),
     body: `<div class="confirm-icon">!</div>
-           <p style="text-align:center;line-height:1.8">确定要删除 <b style="color:var(--danger)">${name}</b> 吗？<br>
-           <span style="color:var(--text-light);font-size:12.5px">此操作不可恢复，请谨慎操作。</span></p>`,
+           <p style="text-align:center;line-height:1.8">${t('del_msg1')} <b style="color:var(--danger)">${name}</b> ？<br>
+           <span style="color:var(--text-light);font-size:12.5px">${t('del_msg2')}</span></p>`,
     onOk(btn) {
-      setBtnLoading(btn, true, "删除中...");
-      setTimeout(() => { closeModal(); toast(`已删除：${name}`); if (after) after(); }, 700);
+      setBtnLoading(btn, true, t('btn_deleting'));
+      setTimeout(() => { closeModal(); toast(t('del_toast', name)); if (after) after(); }, 700);
     }
   });
 }
@@ -875,9 +1264,9 @@ $("#loginForm").addEventListener("submit", async e => {
         p = $("#password").value,
         c = $("#captchaInput").value.trim().toUpperCase();
   let ok = true;
-  ok = validateField($("#fUser"), !!u, "请输入用户名") && ok;
-  ok = validateField($("#fPass"), !!p, "请输入密码") && ok;
-  ok = validateField($("#fCode"), !!c && c === captchaText, c ? "验证码错误，请重新输入" : "请输入验证码") && ok;
+  ok = validateField($("#fUser"), !!u, t('val_enter_username')) && ok;
+  ok = validateField($("#fPass"), !!p, t('val_enter_password')) && ok;
+  ok = validateField($("#fCode"), !!c && c === captchaText, c ? t('val_captcha') : t('val_enter_captcha')) && ok;
   if (!ok) { if (c && c !== captchaText) drawCaptcha(); return; }
 
   const btn = $("#loginBtn");
@@ -891,18 +1280,18 @@ $("#loginForm").addEventListener("submit", async e => {
     const d = await r.json();
     if (d.ok) {
       currentUser = { name: d.user, role: d.role, username: d.username };
-      toast("登录成功，欢迎回来！");
+      toast(t('toast_login_ok'));
       enterApp();
     } else {
       setBtnLoading(btn, false);
-      validateField($("#fUser"), false, "用户名或密码错误");
+      validateField($("#fUser"), false, t('toast_login_err'));
       validateField($("#fPass"), false, " ");
       drawCaptcha(); $("#captchaInput").value = "";
       $("#fCode").classList.remove("ok");
     }
   } catch (ex) {
     setBtnLoading(btn, false);
-    validateField($("#fUser"), false, "服务器连接失败");
+    validateField($("#fUser"), false, t('toast_error'));
   }
 });
 
@@ -1130,30 +1519,30 @@ function navIcon(name){
 }
 
 const MENU = [
-  {group:"工作台", items:[ {id:"dashboard", name:"系统首页", icon:"home"} ]},
-  {group:"系统管理", items:[ {id:"users", name:"用户管理", icon:"user"} ]},
-  {group:"基础信息管理", items:[
+  {id:"workbench",group:"工作台", items:[ {id:"dashboard", name:"系统首页", icon:"home"} ]},
+  {id:"sysadmin",group:"系统管理", items:[ {id:"users", name:"用户管理", icon:"user"} ]},
+  {id:"basic",group:"基础信息管理", items:[
     {id:"routes",  name:"线路管理", icon:"route"},
     {id:"batches", name:"班次管理", icon:"bus"},
     {id:"guides",  name:"导游档案", icon:"flag"},
     {id:"hotels",  name:"宾馆档案", icon:"hotel"},
   ]},
-  {group:"报名组团", items:[
+  {id:"registration",group:"报名组团", items:[
     {id:"signup",      name:"游客报名", icon:"form"},
     {id:"tourists",    name:"游客档案", icon:"card"},
     {id:"createGroup", name:"创建旅游团", icon:"group"},
     {id:"joinQuit",    name:"入团 / 退团", icon:"swap"},
     {id:"groupCheck",  name:"成团校验", icon:"shield"},
   ]},
-  {group:"调度管理", items:[
+  {id:"dispatch",group:"调度管理", items:[
     {id:"guideAssign", name:"导游随团安排", icon:"assign"},
     {id:"hotelAssign", name:"宾馆住宿安排", icon:"bed"},
   ]},
-  {group:"保险结算", items:[
+  {id:"insurance",group:"保险结算", items:[
     {id:"insurance",  name:"团体投保", icon:"policy"},
     {id:"settlement", name:"团费结算", icon:"money"},
   ]},
-  {group:"查询统计", items:[
+  {id:"stats",group:"查询统计", items:[
     {id:"qBatch",   name:"按线路查班次", icon:"chart"},
     {id:"qMembers", name:"团员名单查询", icon:"list"},
     {id:"qGuide",   name:"导游排班查询", icon:"calendar"},
@@ -1162,7 +1551,7 @@ const MENU = [
   ]},
 ];
 const PAGE_GROUP = {};
-MENU.forEach(g => g.items.forEach(it => PAGE_GROUP[it.id] = {group:g.group, name:it.name}));
+MENU.forEach(g => g.items.forEach(it => PAGE_GROUP[it.id] = {group:g.group, groupKey:g.id, name:it.name}));
 
 // 角色 → 可见页面
 const ROLE_PAGES = {
@@ -1183,18 +1572,27 @@ function buildRoleNav(){
   MENU.forEach(g => {
     const items = allowed.length > 0 ? g.items.filter(it => allowed.includes(it.id)) : g.items;
     if (items.length === 0) return;
-    const t = document.createElement("div");
-    t.className = "nav-group-title"; t.textContent = g.group;
-    navScroll.appendChild(t);
+    const t_div = document.createElement("div");
+    t_div.className = "nav-group-title"; t_div.textContent = t('nav_'+g.id);
+    navScroll.appendChild(t_div);
     items.forEach(it => {
       const a = document.createElement("div");
-      a.className = "nav-item"; a.dataset.page = it.id; a.title = it.name;
-      a.innerHTML = `${navIcon(it.icon)}<span class="ntext">${it.name}</span>`;
+      a.className = "nav-item"; a.dataset.page = it.id; a.title = t('menu_'+it.id);
+      a.innerHTML = `${navIcon(it.icon)}<span class="ntext">${t('menu_'+it.id)}</span>`;
       a.addEventListener("click", () => navigate(it.id));
       navScroll.appendChild(a);
     });
   });
+  // 更新语言切换按钮文字
+  const lt = $("#langToggle"); if(lt) lt.textContent = LANG==='zh'?'EN':'中';
 }
+// 重写 navigate 以使用双语面包屑
+const _origNavigate = navigate;
+navigate = function(pageId) {
+  _origNavigate(pageId);
+  const meta = PAGE_GROUP[pageId];
+  if (meta) $("#breadcrumb").innerHTML = t('nav_'+meta.groupKey) + ' / <b>' + t('menu_'+pageId) + '</b>';
+};
 buildRoleNav(); // 初始加载
 
 /* 激活指示条滑动 */
@@ -1206,13 +1604,13 @@ function moveIndicator(item) {
 }
 
 let currentPage = null;
-function navigate(pageId) {
-  if (currentPage === pageId) return;
+function navigate(pageId, force) {
+  if (!force && currentPage === pageId) return;
   currentPage = pageId;
   $$(".nav-item").forEach(n => n.classList.toggle("active", n.dataset.page === pageId));
   moveIndicator($(`.nav-item[data-page="${pageId}"]`));
   const meta = PAGE_GROUP[pageId];
-  $("#breadcrumb").innerHTML = `${meta.group} / <b>${meta.name}</b>`;
+  if (meta) $("#breadcrumb").innerHTML = t('nav_'+meta.groupKey) + ' / <b>' + t('menu_'+pageId) + '</b>';
   const content = $("#content");
   content.scrollTop = 0;
   content.innerHTML = "";
@@ -1239,8 +1637,8 @@ $("#content").addEventListener("scroll", e => {
 /* 退出登录 */
 $("#userChip").addEventListener("click", () => {
   openModal({
-    title:"退出登录", okText:"退出",
-    body:`<p style="line-height:1.8;padding:6px 0">确定要退出当前账号 <b>${currentUser?currentUser.name:'admin'}</b> 吗？</p>`,
+    title:t('modal_logout'), okText:t('modal_logoutBtn'),
+    body:`<p style="line-height:1.8;padding:6px 0">${t('modal_logoutMsg')} <b>${currentUser?currentUser.name:'admin'}</b>？</p>`,
     onOk(){ location.reload(); }
   });
 });
@@ -1293,9 +1691,9 @@ if (!REG_DATA) REG_DATA = [...MOCK_SIGNUPS];
 if (!DASH_STATS) DASH_STATS = { signups: 386, inGroup: 1248, activeGroups: 23, income: 128.6 };
 
 function statusBadge(s){
-  if (s === "已成团") return `<span class="badge badge-green live"><span class="dot"></span>已成团</span>`;
-  if (s === "未成团") return `<span class="badge badge-orange"><span class="dot"></span>未成团</span>`;
-  return `<span class="badge badge-gray"><span class="dot"></span>已解散</span>`;
+  if (s === "已成团") return `<span class="badge badge-green live"><span class="dot"></span>${t('status_formed')}</span>`;
+  if (s === "未成团") return `<span class="badge badge-orange"><span class="dot"></span>${t('status_pending')}</span>`;
+  return `<span class="badge badge-gray"><span class="dot"></span>${t('status_disbanded')}</span>`;
 }
 
 /* ============================================================
@@ -1304,26 +1702,26 @@ function statusBadge(s){
 function pagePlaceholder(meta){
   return `
   <div class="page-title">${meta.name}</div>
-  <div class="page-desc">${meta.group} · 待实现页面</div>
+  <div class="page-desc">${meta.group} · ${t('ph_under_construction', meta.name)}</div>
   <div class="card placeholder-card reveal">
     <div class="ph-icon">🚧</div>
-    <h3>「${meta.name}」页面待实现</h3>
-    <p>布局框架与设计风格确认后，将按计划逐页交付此模块。</p>
+    <h3>「${meta.name}」${t('ph_under_construction', meta.name)}</h3>
+    <p>${t('ph_uc_desc')}</p>
   </div>`;
 }
 
 const PAGES = {
   dashboard(){
     return `
-    <div class="page-title">工作台</div>
-    <div class="page-desc">欢迎回来，${currentUser?currentUser.name:'admin'}！当前角色：${currentUser?currentUser.role:'管理员'}</div>
+    <div class="page-title">${t('dash_title')}</div>
+    <div class="page-desc">${t('dash_welcome')}，${currentUser?currentUser.name:'admin'}！${t('nav_'+PAGE_GROUP.dashboard.groupKey)}：${currentUser?currentUser.role:t('role_admin')}</div>
 
     <div class="stat-grid">
       ${[
-        {lbl:"本月报名人数", to:DASH_STATS.signups || 0,  icon:"form",  bg:"linear-gradient(135deg,#1A6B8A,#2A8FB5)", suffix:" 人"},
-        {lbl:"在团游客",     to:DASH_STATS.inGroup || 0, icon:"group", bg:"linear-gradient(135deg,#27AE60,#4FC97E)", suffix:" 人"},
-        {lbl:"进行中团次",   to:DASH_STATS.activeGroups || 0,   icon:"flag",  bg:"linear-gradient(135deg,#F0A500,#FFC23E)", suffix:" 个"},
-        {lbl:"本月收入(万元)",to:DASH_STATS.income || 0,icon:"money", bg:"linear-gradient(135deg,#E67E22,#F39C4E)", decimals:1, prefix:"¥ "},
+        {lbl:t('dash_signups'), to:DASH_STATS.signups || 0,  icon:"form",  bg:"linear-gradient(135deg,#1A6B8A,#2A8FB5)", suffix:" "+t('dash_signups_unit')},
+        {lbl:t('dash_inGroup'), to:DASH_STATS.inGroup || 0, icon:"group", bg:"linear-gradient(135deg,#27AE60,#4FC97E)", suffix:" "+t('dash_inGroup_unit')},
+        {lbl:t('dash_activeGroups'), to:DASH_STATS.activeGroups || 0,   icon:"flag",  bg:"linear-gradient(135deg,#F0A500,#FFC23E)", suffix:" "+t('dash_activeGroups_unit')},
+        {lbl:t('dash_income'), to:DASH_STATS.income || 0,icon:"money", bg:"linear-gradient(135deg,#E67E22,#F39C4E)", decimals:1, prefix:t('dash_income_prefix')},
       ].map((c,i) => `
       <div class="card stat-card reveal" style="transition-delay:${i*70}ms">
         <div class="stat-icon" style="background:${c.bg}">${navIcon(c.icon)}</div>
@@ -1340,18 +1738,18 @@ const PAGES = {
         <div class="spacer"></div>
         <div class="search-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-          <input id="dashSearch" placeholder="搜索姓名 / 线路 / 班次...">
+          <input id="dashSearch" placeholder="${t('dash_search')}">
         </div>
         <select class="filter-sel" id="dashFilter">
-          <option value="">全部状态</option>
-          <option>已成团</option><option>未成团</option><option>已解散</option>
+          <option value="">${t('dash_allStatus')}</option>
+          <option>${t('status_formed')}</option><option>${t('status_pending')}</option><option>${t('status_disbanded')}</option>
         </select>
-        <button class="btn btn-primary" id="demoAddBtn">＋ 新增报名</button>
+        <button class="btn btn-primary" id="demoAddBtn">${t('dash_addBtn')}</button>
       </div>
       <div style="overflow-x:auto">
         <table>
           <thead><tr>
-            <th>报名编号</th><th>游客姓名</th><th>线路</th><th>班次</th><th>团费</th><th>状态</th><th>操作</th>
+            <th>${t('signup_receiptId')}</th><th>${t('signup_kv_name')}</th><th>${t('signup_kv_route')}</th><th>${t('signup_kv_batch')}</th><th>${t('signup_kv_fee')}</th><th>${t('signup_kv_status')}</th><th>${t('crud_actions')}</th>
           </tr></thead>
           <tbody id="dashTbody"></tbody>
         </table>
@@ -1394,17 +1792,17 @@ const PAGE_INIT = {
           <td>¥ ${r.fee.toLocaleString()}</td>
           <td>${statusBadge(r.status)}</td>
           <td>
-            <button class="op-link" data-op="view" data-id="${r.id}">查看</button>
-            <button class="op-link" data-op="edit" data-id="${r.id}">编辑</button>
-            <button class="op-link danger" data-op="del" data-id="${r.id}">删除</button>
+            <button class="op-link" data-op="view" data-id="${r.id}">${t('crud_view')}</button>
+            <button class="op-link" data-op="edit" data-id="${r.id}">${t('crud_edit')}</button>
+            <button class="op-link danger" data-op="del" data-id="${r.id}">${t('crud_delete')}</button>
           </td>
         </tr>`).join("")
-        : `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:34px">未找到匹配记录</td></tr>`;
+        : `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:34px">${t('crud_noResult')}</td></tr>`;
       renderPager(data.length, pages);
     }
     function renderPager(total, pages){
       $("#dashPager", page).innerHTML = `
-        <span class="pinfo">共 ${total} 条记录，第 ${cur}/${pages} 页</span>
+        <span class="pinfo">${t('crud_records', total, cur, pages)}</span>
         <button ${cur===1?"disabled":""} data-pg="prev">‹</button>
         ${Array.from({length:pages}, (_,i) => `<button class="${i+1===cur?"cur":""}" data-pg="${i+1}">${i+1}</button>`).join("")}
         <button ${cur===pages?"disabled":""} data-pg="next">›</button>`;
@@ -1439,7 +1837,7 @@ const PAGE_INIT = {
         demoFormModal("编辑报名", rec, renderRows);
       }
     });
-    $("#demoAddBtn", page).addEventListener("click", () => demoFormModal("新增报名", null, renderRows));
+    $("#demoAddBtn", page).addEventListener("click", () => demoFormModal(t('dash_addBtn').replace('＋ ',''), null, renderRows));
 
     /* 骨架屏 → stagger 入场 */
     skeleton();
@@ -1453,25 +1851,25 @@ function demoFormModal(title, rec, after){
     title, okText:"提 交",
     body:`
       <div class="field" id="mfName">
-        <label>游客姓名<span class="req">*</span></label>
-        <div class="input-wrap"><input id="mName" value="${rec?rec.name:""}" placeholder="请输入姓名"><span class="check" style="right:14px">✓</span></div>
-        <div class="msg">请输入游客姓名</div>
+        <label>${t('signup_name')}<span class="req">*</span></label>
+        <div class="input-wrap"><input id="mName" value="${rec?rec.name:""}" placeholder="${t('signup_realName')}"><span class="check" style="right:14px">✓</span></div>
+        <div class="msg">${t('signup_realName')}</div>
       </div>
       <div class="field" id="mfRoute">
-        <label>旅游线路<span class="req">*</span></label>
+        <label>${t('signup_kv_route')}<span class="req">*</span></label>
         <div class="input-wrap">
           <select id="mRoute">
-            <option value="">请选择线路</option>
+            <option value="">${t('signup_kv_route')}</option>
             ${["桂林山水4日游","云南大理6日游","海南三亚5日游","西安古都3日游","张家界森林5日游"]
               .map(r => `<option ${rec&&rec.route===r?"selected":""}>${r}</option>`).join("")}
           </select>
         </div>
-        <div class="msg">请选择旅游线路</div>
+        <div class="msg">${t('signup_kv_route')}</div>
       </div>
       <div class="field" id="mfFee">
-        <label>团费（元）<span class="req">*</span></label>
-        <div class="input-wrap"><input id="mFee" type="number" value="${rec?rec.fee:""}" placeholder="请输入团费金额"><span class="check" style="right:14px">✓</span></div>
-        <div class="msg">请输入有效的团费金额</div>
+        <label>${t('signup_kv_fee')}（${t('dash_signups_unit')}）<span class="req">*</span></label>
+        <div class="input-wrap"><input id="mFee" type="number" value="${rec?rec.fee:""}" placeholder="${t('signup_kv_fee')}"><span class="check" style="right:14px">✓</span></div>
+        <div class="msg">${t('signup_kv_fee')}</div>
       </div>`,
     onOk(btn){
       const name = $("#mName").value.trim(), route = $("#mRoute").value, fee = +$("#mFee").value;
@@ -1573,9 +1971,19 @@ const STATUS_COLOR = {
   "已成团":"green","未成团":"orange","已解散":"gray",
   "已收":"green","待收":"orange","已投保":"green","未投保":"orange",
 };
+const STATUS_KEY = {
+  "启用":"status_active","停用":"status_disabled","在售":"status_onSale","下架":"status_offSale",
+  "报名中":"status_registered","已满":"status_formed","已出发":"status_active","已结束":"status_disbanded",
+  "带团中":"status_busy","空闲":"status_free","休假":"status_vacation",
+  "已报名":"status_registered","已入团":"status_joined","已退团":"status_quit",
+  "已成团":"status_formed","未成团":"status_pending","已解散":"status_disbanded",
+  "已收":"status_paid","待收":"status_unpaid","已投保":"status_insured","未投保":"status_uninsured",
+};
 function sBadge(s){
+  const key = STATUS_KEY[s];
+  const display = key ? t(key) : s;
   const c = (STATUS_COLOR[s] || "gray").split(" ");
-  return `<span class="badge badge-${c[0]}${c[1] ? " live" : ""}"><span class="dot"></span>${s}</span>`;
+  return `<span class="badge badge-${c[0]}${c[1] ? " live" : ""}"><span class="dot"></span>${display}</span>`;
 }
 const fmtMoney = n => "¥ " + (+n).toLocaleString("zh-CN");
 function routeOf(batchNo){
@@ -1597,20 +2005,20 @@ function crudFieldHtml(f, rec){
   let input;
   if (f.type === "select") {
     const opts = typeof f.options === "function" ? f.options() : f.options;
-    input = `<select id="cf_${f.key}"><option value="">请选择${f.label}</option>${opts.map(o => `<option ${String(v)===String(o)?"selected":""}>${o}</option>`).join("")}</select>`;
+    input = `<select id="cf_${f.key}"><option value="">${t('ph_select', f.label)}</option>${opts.map(o => `<option ${String(v)===String(o)?"selected":""}>${o}</option>`).join("")}</select>`;
   } else {
-    input = `<input id="cf_${f.key}" type="${f.type||"text"}" value="${v}" placeholder="${f.placeholder||"请输入"+f.label}">`;
+    input = `<input id="cf_${f.key}" type="${f.type||"text"}" value="${v}" placeholder="${f.placeholder||t('ph_enter', f.label)}">`;
   }
   return `<div class="field" id="cff_${f.key}">
     <label>${f.label}<span class="req">*</span></label>
     <div class="input-wrap">${input}<span class="check" style="right:14px">✓</span></div>
-    <div class="msg">请${f.type==="select"?"选择":"正确填写"}${f.label}</div>
+    <div class="msg">${f.type==="select"?t('ph_select', f.label):t('ph_enter', f.label)}</div>
   </div>`;
 }
 
 function crudFormModal(cfg, rec, after){
   openModal({
-    title: (rec ? "编辑" : (cfg.addLabel || "新增")) + cfg.entity, okText: "提 交",
+    title: (rec ? t('form_edit') : (cfg.addLabel || t('form_add'))) + cfg.entity, okText: t('form_submit'),
     body: cfg.form.map(f => crudFieldHtml(f, rec)).join(""),
     onOk(btn){
       let ok = true; const vals = {};
@@ -1655,9 +2063,12 @@ function crudFormModal(cfg, rec, after){
 
 function registerCrud(id, cfg){
   const ps = cfg.pageSize || 6;
+  const singular = {batches:'batch',routes:'route',guides:'guide',hotels:'hotel',tourists:'tourist',users:'users'};
+  const stem = singular[id] || id;
+  const descKey = stem + '_desc';
   PAGES[id] = meta => `
-    <div class="page-title">${meta.name}</div>
-    <div class="page-desc">${cfg.desc}</div>
+    <div class="page-title">${t('menu_'+id)}</div>
+    <div class="page-desc">${t(descKey)}</div>
     <div class="card table-card reveal">
       <div class="table-toolbar">
         <div class="search-box">
@@ -1666,15 +2077,15 @@ function registerCrud(id, cfg){
         </div>
         ${(cfg.filters||[]).map(f => `
         <select class="filter-sel" data-r="filter" data-key="${f.key}">
-          <option value="">${f.label}（全部）</option>
+          <option value="">${t('filter_all', f.label)}</option>
           ${f.options.map(o => `<option>${o}</option>`).join("")}
         </select>`).join("")}
         <div class="spacer"></div>
-        <button class="btn btn-primary" data-r="add">＋ ${cfg.addLabel || "新增" + cfg.entity}</button>
+        <button class="btn btn-primary" data-r="add">＋ ${cfg.addLabel || t('crud_add', cfg.entity)}</button>
       </div>
       <div style="overflow-x:auto">
         <table>
-          <thead><tr>${cfg.columns.map(c => `<th>${c.label}</th>`).join("")}<th>操作</th></tr></thead>
+          <thead><tr>${cfg.columns.map(c => `<th>${c.label}</th>`).join("")}<th>${t('crud_actions')}</th></tr></thead>
           <tbody data-r="tbody"></tbody>
         </table>
       </div>
@@ -1698,14 +2109,14 @@ function registerCrud(id, cfg){
         <tr class="row-in" style="animation-delay:${i*40}ms" data-idx="${cfg.data.indexOf(r)}">
           ${cfg.columns.map(c => `<td>${c.render ? c.render(r) : r[c.key]}</td>`).join("")}
           <td>
-            <button class="op-link" data-op="view">查看</button>
-            <button class="op-link" data-op="edit">编辑</button>
-            <button class="op-link danger" data-op="del">删除</button>
+            <button class="op-link" data-op="view">${t('crud_view')}</button>
+            <button class="op-link" data-op="edit">${t('crud_edit')}</button>
+            <button class="op-link danger" data-op="del">${t('crud_delete')}</button>
           </td>
         </tr>`).join("")
-      : `<tr><td colspan="${cfg.columns.length+1}" style="text-align:center;color:var(--text-light);padding:34px">未找到匹配记录</td></tr>`;
+      : `<tr><td colspan="${cfg.columns.length+1}" style="text-align:center;color:var(--text-light);padding:34px">${t('crud_noResult')}</td></tr>`;
       pager.innerHTML = `
-        <span class="pinfo">共 ${data.length} 条记录，第 ${cur}/${pages} 页</span>
+        <span class="pinfo">${t('crud_records', data.length, cur, pages)}</span>
         <button ${cur===1?"disabled":""} data-pg="prev">‹</button>
         ${Array.from({length:pages}, (_,i) => `<button class="${i+1===cur?"cur":""}" data-pg="${i+1}">${i+1}</button>`).join("")}
         <button ${cur===pages?"disabled":""} data-pg="next">›</button>`;
@@ -1937,15 +2348,15 @@ registerCrud("tourists", {
    7. 游客报名（分步表单）
 ============================================================ */
 PAGES.signup = meta => `
-  <div class="page-title">游客报名</div>
-  <div class="page-desc">分三步完成报名：选择线路/班次 → 填写游客信息 → 确认提交</div>
+  <div class="page-title">${t('signup_title')}</div>
+  <div class="page-desc">${t('signup_desc')}</div>
   <div class="card reveal" style="max-width:880px">
     <div class="steps" id="wizSteps">
-      <div class="step active"><div class="s-dot">1</div><div class="s-name">选择线路/班次</div></div>
+      <div class="step active"><div class="s-dot">1</div><div class="s-name">${t('wiz_step1')}</div></div>
       <div class="s-line"></div>
-      <div class="step"><div class="s-dot">2</div><div class="s-name">填写游客信息</div></div>
+      <div class="step"><div class="s-dot">2</div><div class="s-name">${t('wiz_step2')}</div></div>
       <div class="s-line"></div>
-      <div class="step"><div class="s-dot">3</div><div class="s-name">确认提交</div></div>
+      <div class="step"><div class="s-dot">3</div><div class="s-name">${t('wiz_step3')}</div></div>
     </div>
     <div id="wizBody"></div>
     <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:22px" id="wizFoot"></div>
@@ -1970,12 +2381,12 @@ PAGE_INIT.signup = page => {
     if (st.step === 1) {
       const routes = MOCK.routes.filter(r => r.status === "在售");
       body.innerHTML = `<div class="step-panel">
-        <p style="font-weight:700;margin-bottom:12px">① 选择旅游线路</p>
+        <p style="font-weight:700;margin-bottom:12px">${t('signup_selRoute')}</p>
         <div class="pick-grid" id="wRoutes">${routes.map(r => `
           <div class="pick-card ${st.route===r.name?"sel":""}" data-route="${r.name}">
             <h4>${r.name}</h4>
             <div class="pc-sub">${r.days} 天 · ${r.spots}</div>
-            <div class="pc-price" style="margin-top:8px">${fmtMoney(r.price)}<span style="font-size:12px;color:var(--text-light);font-weight:400"> /人</span></div>
+            <div class="pc-price" style="margin-top:8px">${fmtMoney(r.price)}<span style="font-size:12px;color:var(--text-light);font-weight:400"> ${t('signup_perPerson')}</span></div>
           </div>`).join("")}</div>
         <div id="wBatchWrap" style="margin-top:20px">${batchListHtml()}</div>
       </div>`;
@@ -1986,26 +2397,26 @@ PAGE_INIT.signup = page => {
         $("#wBatchWrap", page).innerHTML = batchListHtml();
       });
       body.addEventListener("click", batchPick);
-      foot.innerHTML = `<button class="btn btn-primary" id="wNext1">下一步 ›</button>`;
+      foot.innerHTML = `<button class="btn btn-primary" id="wNext1">${t('wiz_next')}</button>`;
       $("#wNext1", page).addEventListener("click", () => {
-        if (!st.route)  return toast("请先选择旅游线路", "error");
-        if (!st.batch)  return toast("请选择出发班次", "error");
+        if (!st.route)  return toast(t('signup_pickRoute'), "error");
+        if (!st.batch)  return toast(t('signup_pickBatch'), "error");
         st.step = 2; render();
       });
     } else if (st.step === 2) {
       body.innerHTML = `<div class="step-panel" style="max-width:460px;margin:0 auto">
-        <p style="font-weight:700;margin-bottom:14px">② 填写游客信息</p>
-        <div class="field" id="wfName"><label>游客姓名<span class="req">*</span></label>
-          <div class="input-wrap"><input id="wName" value="${st.name}" placeholder="请输入真实姓名"><span class="check" style="right:14px">✓</span></div>
-          <div class="msg">请输入游客姓名</div></div>
-        <div class="field" id="wfId"><label>身份证号<span class="req">*</span></label>
-          <div class="input-wrap"><input id="wId" value="${st.idcard}" maxlength="18" placeholder="18 位身份证号码"><span class="check" style="right:14px">✓</span></div>
-          <div class="msg">请输入 18 位身份证号</div></div>
-        <div class="field" id="wfPhone"><label>联系电话<span class="req">*</span></label>
-          <div class="input-wrap"><input id="wPhone" value="${st.phone}" maxlength="11" placeholder="11 位手机号"><span class="check" style="right:14px">✓</span></div>
-          <div class="msg">请输入 11 位手机号</div></div>
+        <p style="font-weight:700;margin-bottom:14px">${t('signup_selTourist')}</p>
+        <div class="field" id="wfName"><label>${t('signup_name')}<span class="req">*</span></label>
+          <div class="input-wrap"><input id="wName" value="${st.name}" placeholder="${t('signup_realName')}"><span class="check" style="right:14px">✓</span></div>
+          <div class="msg">${t('signup_realName')}</div></div>
+        <div class="field" id="wfId"><label>${t('signup_idcard')}<span class="req">*</span></label>
+          <div class="input-wrap"><input id="wId" value="${st.idcard}" maxlength="18" placeholder="${t('signup_idHint')}"><span class="check" style="right:14px">✓</span></div>
+          <div class="msg">${t('signup_idErr')}</div></div>
+        <div class="field" id="wfPhone"><label>${t('signup_phone')}<span class="req">*</span></label>
+          <div class="input-wrap"><input id="wPhone" value="${st.phone}" maxlength="11" placeholder="${t('signup_phoneHint')}"><span class="check" style="right:14px">✓</span></div>
+          <div class="msg">${t('signup_phoneErr')}</div></div>
       </div>`;
-      foot.innerHTML = `<button class="btn btn-ghost" id="wBack">‹ 上一步</button><button class="btn btn-primary" id="wNext2">下一步 ›</button>`;
+      foot.innerHTML = `<button class="btn btn-ghost" id="wBack">${t('wiz_back')}</button><button class="btn btn-primary" id="wNext2">${t('wiz_next')}</button>`;
       $("#wBack", page).addEventListener("click", () => { saveStep2(); st.step = 1; render(); });
       $("#wNext2", page).addEventListener("click", () => {
         saveStep2();
@@ -2019,17 +2430,17 @@ PAGE_INIT.signup = page => {
     } else {
       const r = MOCK.routes.find(x => x.name === st.route);
       body.innerHTML = `<div class="step-panel" style="max-width:520px;margin:0 auto">
-        <p style="font-weight:700;margin-bottom:14px">③ 确认报名信息</p>
+        <p style="font-weight:700;margin-bottom:14px">${t('signup_confirm')}</p>
         <table class="kv">
-          <tr><td>旅游线路</td><td><b>${st.route}</b>（${r.days} 天）</td></tr>
-          <tr><td>出发班次</td><td><span class="badge badge-blue">${st.batch.no}</span>　${st.batch.depart} 出发</td></tr>
-          <tr><td>游客姓名</td><td><b>${st.name}</b></td></tr>
-          <tr><td>身份证号</td><td style="font-family:Consolas,monospace">${st.idcard.slice(0,6)}********${st.idcard.slice(-4)}</td></tr>
-          <tr><td>联系电话</td><td>${st.phone}</td></tr>
-          <tr><td>应缴团费</td><td><b style="color:var(--accent-dark);font-size:17px">${fmtMoney(r.price)}</b></td></tr>
+          <tr><td>${t('signup_kv_route')}</td><td><b>${st.route}</b>（${r.days} 天）</td></tr>
+          <tr><td>${t('signup_kv_batch')}</td><td><span class="badge badge-blue">${st.batch.no}</span>　${st.batch.depart} ${t('signup_kv_departSuffix')}</td></tr>
+          <tr><td>${t('signup_kv_name')}</td><td><b>${st.name}</b></td></tr>
+          <tr><td>${t('signup_kv_id')}</td><td style="font-family:Consolas,monospace">${st.idcard.slice(0,6)}********${st.idcard.slice(-4)}</td></tr>
+          <tr><td>${t('signup_kv_phone')}</td><td>${st.phone}</td></tr>
+          <tr><td>${t('signup_kv_fee')}</td><td><b style="color:var(--accent-dark);font-size:17px">${fmtMoney(r.price)}</b></td></tr>
         </table>
       </div>`;
-      foot.innerHTML = `<button class="btn btn-ghost" id="wBack">‹ 上一步</button><button class="btn btn-primary" id="wSubmit">确认提交报名</button>`;
+      foot.innerHTML = `<button class="btn btn-ghost" id="wBack">${t('wiz_back')}</button><button class="btn btn-primary" id="wSubmit">${t('wiz_submit')}</button>`;
       $("#wBack", page).addEventListener("click", () => { st.step = 2; render(); });
       $("#wSubmit", page).addEventListener("click", e => {
         const btn = e.currentTarget;
@@ -2042,20 +2453,20 @@ PAGE_INIT.signup = page => {
           $$("#wizSteps .step", page).forEach(s => { s.classList.add("done"); s.classList.remove("active"); s.querySelector(".s-dot").textContent = "✓"; });
           $$("#wizSteps .s-line", page).forEach(l => l.classList.add("done"));
           body.innerHTML = `<div class="receipt" style="max-width:520px;margin:0 auto">
-            <h4>✈ 报名回执单</h4>
+            <h4>${t('signup_receipt')}</h4>
             <table class="kv">
-              <tr><td>报名编号</td><td><b style="font-family:Consolas,monospace">${id}</b></td></tr>
-              <tr><td>游客姓名</td><td><b>${st.name}</b></td></tr>
-              <tr><td>线路/班次</td><td>${st.route}　<span class="badge badge-blue">${st.batch.no}</span></td></tr>
-              <tr><td>出发日期</td><td>${st.batch.depart}</td></tr>
-              <tr><td>应缴团费</td><td><b style="color:var(--accent-dark)">${fmtMoney(r.price)}</b></td></tr>
-              <tr><td>报名状态</td><td>${sBadge("已报名")}</td></tr>
+              <tr><td>${t('signup_receiptId')}</td><td><b style="font-family:Consolas,monospace">${id}</b></td></tr>
+              <tr><td>${t('signup_kv_name')}</td><td><b>${st.name}</b></td></tr>
+              <tr><td>${t('signup_kv_route')}/${t('signup_kv_batch')}</td><td>${st.route}　<span class="badge badge-blue">${st.batch.no}</span></td></tr>
+              <tr><td>${t('signup_kv_depart')}</td><td>${st.batch.depart}</td></tr>
+              <tr><td>${t('signup_kv_fee')}</td><td><b style="color:var(--accent-dark)">${fmtMoney(r.price)}</b></td></tr>
+              <tr><td>${t('signup_kv_status')}</td><td>${sBadge("已报名")}</td></tr>
             </table>
-            <p style="color:var(--text-light);font-size:12px;margin-top:10px">请妥善保存报名编号，出团前 3 天将以短信通知集合信息。</p>
+            <p style="color:var(--text-light);font-size:12px;margin-top:10px">${t('signup_receiptNote')}</p>
           </div>`;
-          foot.innerHTML = `<button class="btn btn-blue" id="wAgain">＋ 再报一单</button>`;
+          foot.innerHTML = `<button class="btn btn-blue" id="wAgain">${t('signup_again')}</button>`;
           $("#wAgain", page).addEventListener("click", () => { Object.assign(st, {step:1, route:null, batch:null, name:"", idcard:"", phone:""}); render(); });
-          toast("报名成功！回执已生成");
+          toast(t('toast_login_ok'));
         }, 900);
       });
     }
@@ -2067,9 +2478,9 @@ PAGE_INIT.signup = page => {
     st.phone = ($("#wPhone", page)?.value || st.phone).trim();
   }
   function batchListHtml(){
-    if (!st.route) return `<p style="color:var(--text-light);font-size:13px">请先选择线路，再挑选出发班次</p>`;
+    if (!st.route) return `<p style="color:var(--text-light);font-size:13px">${t('signup_pickRoute')}</p>`;
     const bs = MOCK.batches.filter(b => b.route === st.route && (b.status === "报名中" || b.status === "已满"));
-    if (!bs.length) return `<p style="color:var(--text-light)">该线路暂无可报名班次</p>`;
+    if (!bs.length) return `<p style="color:var(--text-light)">${t('signup_pickBatch')}</p>`;
     return `<p style="font-weight:700;margin-bottom:12px">② 选择出发班次</p>
       <div class="pick-grid">${bs.map(b => `
         <div class="pick-card ${b.status==="已满"?"disabled":""} ${st.batch===b?"sel":""}" data-batch="${b.no}">
@@ -2094,25 +2505,25 @@ PAGE_INIT.signup = page => {
    9. 创建旅游团
 ============================================================ */
 PAGES.createGroup = meta => `
-  <div class="page-title">创建旅游团</div>
-  <div class="page-desc">填写团基本信息，并从所选班次的已报名游客中勾选首批团员</div>
+  <div class="page-title">${t('cg_title')}</div>
+  <div class="page-desc">${t('cg_desc')}</div>
   <div class="card reveal" style="max-width:880px">
     <div class="form-grid">
-      <div class="field" id="cgfName"><label>团名<span class="req">*</span></label>
-        <div class="input-wrap"><input id="cgName" placeholder="如：桂林欢乐7团"><span class="check" style="right:14px">✓</span></div>
-        <div class="msg">请输入团名</div></div>
-      <div class="field" id="cgfBatch"><label>所属班次<span class="req">*</span></label>
-        <div class="input-wrap"><select id="cgBatch"><option value="">请选择班次</option>
+      <div class="field" id="cgfName"><label>${t('cg_name')}<span class="req">*</span></label>
+        <div class="input-wrap"><input id="cgName" placeholder="${t('cg_nameHint')}"><span class="check" style="right:14px">✓</span></div>
+        <div class="msg">${t('cg_nameMsg')}</div></div>
+      <div class="field" id="cgfBatch"><label>${t('cg_batch')}<span class="req">*</span></label>
+        <div class="input-wrap"><select id="cgBatch"><option value="">${t('cg_selBatch')}</option>
           ${MOCK.batches.filter(b => b.status==="报名中"||b.status==="已满").map(b => `<option value="${b.no}">${b.no}（${b.route}）</option>`).join("")}
         </select></div>
-        <div class="msg">请选择所属班次</div></div>
-      <div class="field" id="cgfDate"><label>出发日期<span class="req">*</span></label>
+        <div class="msg">${t('cg_selBatchMsg')}</div></div>
+      <div class="field" id="cgfDate"><label>${t('cg_date')}<span class="req">*</span></label>
         <div class="input-wrap"><input id="cgDate" type="date"><span class="check" style="right:14px">✓</span></div>
-        <div class="msg">请选择出发日期</div></div>
+        <div class="msg">${t('cg_selDate')}</div></div>
     </div>
-    <div id="cgMembers" style="margin-top:6px"><p style="color:var(--text-light);font-size:13px">选择班次后，将列出该班次下处于「已报名」状态的游客</p></div>
+    <div id="cgMembers" style="margin-top:6px"><p style="color:var(--text-light);font-size:13px">${t('cg_resetHint')}</p></div>
     <div style="display:flex;justify-content:flex-end;margin-top:20px">
-      <button class="btn btn-primary" id="cgSubmit">创建旅游团</button>
+      <button class="btn btn-primary" id="cgSubmit">${t('cg_create')}</button>
     </div>
   </div>`;
 
@@ -2123,8 +2534,8 @@ PAGE_INIT.createGroup = page => {
     $("#cgDate", page).value = b ? b.depart : "";
     const cands = b ? MOCK.tourists.filter(t => t.batch === b.no && t.status === "已报名") : [];
     wrap.innerHTML = !b ? "" : !cands.length
-      ? `<p style="color:var(--text-light)">该班次暂无「已报名」待组团的游客</p>`
-      : `<p style="font-weight:700;margin-bottom:10px">勾选首批团员（已报名 ${cands.length} 人）</p>
+      ? `<p style="color:var(--text-light)">${t('cg_noCandidate')}</p>`
+      : `<p style="font-weight:700;margin-bottom:10px">${t('cg_pickHint', cands.length)}</p>
          <div class="pick-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">${cands.map((t,i) => `
           <label class="t-item" style="cursor:pointer;animation-delay:${i*40}ms;margin-bottom:0">
             <input type="checkbox" class="cgChk" value="${t.name}" checked style="accent-color:var(--primary);width:16px;height:16px">
@@ -2139,16 +2550,16 @@ PAGE_INIT.createGroup = page => {
     ok = validateField($("#cgfDate", page), !!date) && ok;
     if (!ok) return;
     const picked = $$(".cgChk:checked", page).map(c => c.value);
-    if (!picked.length) return toast("请至少勾选 1 名团员", "error");
+    if (!picked.length) return toast(t('cg_pickMin'), "error");
     const btn = e.currentTarget;
-    setBtnLoading(btn, true, "创建中...");
+    setBtnLoading(btn, true, t('btn_creating'));
     setTimeout(() => {
       MOCK.groups.push({name, batch:bno, depart:date, members:picked.length, status:picked.length>=20?"已成团":"未成团", guide:"", hotel:"", insured:false, paid:false});
       MOCK.tourists.forEach(t => { if (picked.includes(t.name) && t.batch === bno) { t.group = name; t.status = "已入团"; } });
       setBtnLoading(btn, false);
-      toast(`旅游团「${name}」创建成功，已纳入 ${picked.length} 名团员`);
+      toast(t('cg_created', name, picked.length));
       $("#cgName", page).value = ""; $("#cgBatch", page).value = ""; $("#cgDate", page).value = "";
-      wrap.innerHTML = `<p style="color:var(--text-light);font-size:13px">选择班次后，将列出该班次下处于「已报名」状态的游客</p>`;
+      wrap.innerHTML = `<p style="color:var(--text-light);font-size:13px">${t('cg_resetHint')}</p>`;
       $$(".field", page).forEach(f => f.classList.remove("ok","error"));
     }, 800);
   });
@@ -2158,15 +2569,15 @@ PAGE_INIT.createGroup = page => {
    10. 入团 / 退团
 ============================================================ */
 PAGES.joinQuit = meta => `
-  <div class="page-title">入团 / 退团操作</div>
-  <div class="page-desc">左侧为该团所属班次中待分配的游客，右侧为已入团名单；支持拖拽或按钮操作</div>
+  <div class="page-title">${t('jq_title')}</div>
+  <div class="page-desc">${t('jq_desc')}</div>
   <div class="card reveal">
     <div class="table-toolbar" style="padding:0 0 4px">
-      <label style="font-weight:700">选择旅游团：</label>
+      <label style="font-weight:700">${t('jq_selGroup')}</label>
       <select class="filter-sel" id="jqGroup" style="min-width:240px">
         ${MOCK.groups.filter(g => g.status !== "已解散").map(g => `<option value="${g.name}">${g.name}（${g.batch}）</option>`).join("")}
       </select>
-      <span style="color:var(--text-light);font-size:12.5px">💡 拖动卡片到另一侧，或点击卡片上的按钮</span>
+      <span style="color:var(--text-light);font-size:12.5px">${t('jq_dragHint')}</span>
     </div>
     <div class="transfer">
       <div class="t-panel" data-zone="wait">
@@ -2190,30 +2601,30 @@ PAGE_INIT.joinQuit = page => {
       inn:  MOCK.tourists.filter(t => t.group === group.name && t.status === "已入团"),
     };
   }
-  function itemHtml(t, zone, i){
-    return `<div class="t-item" draggable="true" data-name="${t.name}" style="animation-delay:${i*40}ms">
-      <span><b>${t.name}</b><br><span class="ti-sub">证件尾号 ${t.idcard.slice(-4)} · ${t.phone}</span></span>
+  function itemHtml(tr, zone, i){
+    return `<div class="t-item" draggable="true" data-name="${tr.name}" style="animation-delay:${i*40}ms">
+      <span><b>${tr.name}</b><br><span class="ti-sub">${t('joinQuit_idTail')} ${tr.idcard.slice(-4)} · ${tr.phone}</span></span>
       ${zone === "wait"
-        ? `<button class="op-link" data-act="join">入团 →</button>`
-        : `<button class="op-link danger" data-act="quit">← 退团</button>`}
+        ? `<button class="op-link" data-act="join">${t('joinQuit_join')}</button>`
+        : `<button class="op-link danger" data-act="quit">${t('joinQuit_quit')}</button>`}
     </div>`;
   }
   function render(){
     const {wait, inn} = lists();
-    $('[data-list="wait"]', page).innerHTML = wait.length ? wait.map((t,i) => itemHtml(t,"wait",i)).join("") : `<p style="color:var(--text-light);font-size:13px;padding:8px">暂无待分配游客</p>`;
-    $('[data-list="in"]', page).innerHTML  = inn.length  ? inn.map((t,i) => itemHtml(t,"in",i)).join("")  : `<p style="color:var(--text-light);font-size:13px;padding:8px">暂无团员，从左侧拖入</p>`;
-    $("#jqWaitN", page).textContent = wait.length + " 人";
-    $("#jqInN", page).textContent = inn.length + " 人";
+    $('[data-list="wait"]', page).innerHTML = wait.length ? wait.map((t,i) => itemHtml(t,"wait",i)).join("") : `<p style="color:var(--text-light);font-size:13px;padding:8px">${t('joinQuit_waitEmpty')}</p>`;
+    $('[data-list="in"]', page).innerHTML  = inn.length  ? inn.map((t,i) => itemHtml(t,"in",i)).join("")  : `<p style="color:var(--text-light);font-size:13px;padding:8px">${t('joinQuit_inEmpty')}</p>`;
+    $("#jqWaitN", page).textContent = wait.length + " " + t('dash_signups_unit');
+    $("#jqInN", page).textContent = inn.length + " " + t('dash_signups_unit');
   }
   function move(name, toZone){
-    const t = MOCK.tourists.find(x => x.name === name && x.batch === group.batch);
-    if (!t) return;
-    if (toZone === "in" && t.status === "已报名") {
-      t.group = group.name; t.status = "已入团"; group.members++;
-      toast(`${t.name} 已加入「${group.name}」`);
-    } else if (toZone === "wait" && t.status === "已入团") {
-      t.group = ""; t.status = "已报名"; group.members--;
-      toast(`${t.name} 已退团`, "info");
+    const tr = MOCK.tourists.find(x => x.name === name && x.batch === group.batch);
+    if (!tr) return;
+    if (toZone === "in" && tr.status === "已报名") {
+      tr.group = group.name; tr.status = "已入团"; group.members++;
+      toast(t('joinQuit_joined', tr.name, group.name));
+    } else if (toZone === "wait" && tr.status === "已入团") {
+      tr.group = ""; tr.status = "已报名"; group.members--;
+      toast(t('joinQuit_quitToast', tr.name), "info");
     } else return;
     group.status = group.members >= 20 ? "已成团" : "未成团";
     render();
@@ -2246,10 +2657,10 @@ PAGE_INIT.joinQuit = page => {
    11. 成团校验
 ============================================================ */
 PAGES.groupCheck = meta => `
-  <div class="page-title">成团校验</div>
-  <div class="page-desc">成团规则：人数不足 20 人 — <b style="color:var(--danger)">不足（红）</b>；20–50 人 — <b style="color:var(--success)">达标（绿）</b></div>
+  <div class="page-title">${t('gc_title')}</div>
+  <div class="page-desc">${t('gc_desc')}</div>
   <div class="reveal" style="display:flex;gap:14px;align-items:center;margin-bottom:18px">
-    <button class="btn btn-primary" id="gcRun">⚡ 一键成团校验</button>
+    <button class="btn btn-primary" id="gcRun">${t('gc_run')}</button>
     <span id="gcSummary" style="color:var(--text-light);font-size:13px"></span>
   </div>
   <div class="stat-grid" id="gcGrid" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr))">
@@ -2259,10 +2670,10 @@ PAGES.groupCheck = meta => `
           <b style="font-size:15px;color:var(--primary-dark)">${g.name}</b>
           <span style="margin-left:auto">${sBadge(g.status)}</span>
         </div>
-        <div style="font-size:12.5px;color:var(--text-light);margin-bottom:12px">${g.batch} · ${g.depart} 出发</div>
+        <div style="font-size:12.5px;color:var(--text-light);margin-bottom:12px">${g.batch} · ${g.depart} ${t('signup_kv_departSuffix')}</div>
         <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px">
           <span style="font-size:26px;font-weight:800;color:${g.members<20?"var(--danger)":"var(--success)"}">${g.members}</span>
-          <span style="color:var(--text-light);font-size:12.5px">/ 50 人　${g.members<20?`还差 ${20-g.members} 人成团`:"已达成团人数"}</span>
+          <span style="color:var(--text-light);font-size:12.5px">/ 50 ${t('dash_signups_unit')}　${g.members<20?t('gc_needMore', 20-g.members):t('gc_enough')}</span>
         </div>
         <div class="progress"><i class="${g.members<20?"bad":"ok"}" style="--p:${Math.min(g.members/50,1)}"></i></div>
         <div class="gc-result" style="margin-top:10px;min-height:22px"></div>
@@ -2272,7 +2683,7 @@ PAGES.groupCheck = meta => `
 PAGE_INIT.groupCheck = page => {
   $("#gcRun", page).addEventListener("click", e => {
     const btn = e.currentTarget;
-    setBtnLoading(btn, true, "校验中...");
+    setBtnLoading(btn, true, t('btn_checking'));
     setTimeout(() => {
       setBtnLoading(btn, false);
       let pass = 0, fail = 0;
@@ -2285,12 +2696,12 @@ PAGE_INIT.groupCheck = page => {
           void card.offsetWidth;
           card.classList.add(ok ? "flash-green" : "flash-red");
           card.querySelector(".gc-result").innerHTML = ok
-            ? `<span class="badge badge-green"><span class="dot"></span>校验通过，可发团</span>`
-            : `<span class="badge badge-red"><span class="dot"></span>人数不足，暂不可发团</span>`;
+            ? `<span class="badge badge-green"><span class="dot"></span>${t('gc_pass')}</span>`
+            : `<span class="badge badge-red"><span class="dot"></span>${t('gc_fail')}</span>`;
         }, i * 120);
       });
-      $("#gcSummary", page).innerHTML = `校验完成：<b style="color:var(--success)">${pass} 个团达标</b>，<b style="color:var(--danger)">${fail} 个团人数不足</b>`;
-      toast(`校验完成：${pass} 个达标 / ${fail} 个不足`, fail ? "info" : "success");
+      $("#gcSummary", page).innerHTML = t('gc_summary', pass, fail);
+      toast(t('gc_toast', pass, fail), fail ? "info" : "success");
     }, 900);
   });
 };
@@ -2299,8 +2710,8 @@ PAGE_INIT.groupCheck = page => {
    12. 导游随团安排
 ============================================================ */
 PAGES.guideAssign = meta => `
-  <div class="page-title">导游随团安排</div>
-  <div class="page-desc">为各团次分配随团导游；导游状态：<b style="color:var(--warning)">忙</b> = 带团中 / <b style="color:var(--success)">闲</b> = 空闲</div>
+  <div class="page-title">${t('guideAssign_title')}</div>
+  <div class="page-desc">${t('guideAssign_desc')}</div>
   <div class="card reveal" style="margin-bottom:16px">
     <b style="color:var(--primary-dark)">导游当前状态一览</b>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px" id="gaChips">
@@ -2318,6 +2729,7 @@ PAGES.guideAssign = meta => `
 
 PAGE_INIT.guideAssign = page => {
   const tbody = $("#gaTbody", page);
+  const GSS = {"带团中":"ga_busy", "空闲":"ga_free", "休假":"ga_leave"};
   function render(){
     const groups = MOCK.groups.filter(g => g.status !== "已解散");
     tbody.innerHTML = groups.map((g,i) => `
@@ -2325,20 +2737,20 @@ PAGE_INIT.guideAssign = page => {
         <td><b>${g.name}</b></td>
         <td><span class="badge badge-blue">${g.batch}</span></td>
         <td>${g.depart}</td>
-        <td>${g.members} 人</td>
+        <td>${g.members} ${t('dash_signups_unit')}</td>
         <td>${sBadge(g.status)}</td>
-        <td>${g.guide ? `<b>${g.guide}</b>` : `<span style="color:var(--text-light)">未分配</span>`}</td>
+        <td>${g.guide ? `<b>${g.guide}</b>` : `<span style="color:var(--text-light)">${t('ga_unassigned')}</span>`}</td>
         <td>
           <select class="filter-sel ga-sel" style="min-width:150px">
-            <option value="">请选择导游</option>
-            ${MOCK.guides.map(d => `<option value="${d.name}" ${d.status!=="空闲"&&d.name!==g.guide?"disabled":""}>${d.name} · ${d.level}（${d.status==="带团中"?"忙":d.status==="空闲"?"闲":"休"}）</option>`).join("")}
+            <option value="">${t('ga_selGuide')}</option>
+            ${MOCK.guides.map(d => `<option value="${d.name}" ${d.status!=="空闲"&&d.name!==g.guide?"disabled":""}>${d.name} · ${d.level}（${t(GSS[d.status])}）</option>`).join("")}
           </select>
         </td>
-        <td><button class="btn btn-blue ga-btn" style="padding:6px 14px;font-size:13px" ${g.status!=="已成团"?'disabled title="未成团暂不可分配"':""}>分 配</button></td>
+        <td><button class="btn btn-blue ga-btn" style="padding:6px 14px;font-size:13px" ${g.status!=="已成团"?'disabled title="'+t('ga_cannotAssign')+'"':""}>${t('ga_assign')}</button></td>
       </tr>`).join("");
     /* 刷新顶部状态条 */
     $("#gaChips", page).innerHTML = MOCK.guides.map(g =>
-      `<span class="badge ${g.status==="带团中"?"badge-orange live":g.status==="空闲"?"badge-green":"badge-gray"}"><span class="dot"></span>${g.name}（${g.status==="带团中"?"忙":g.status==="空闲"?"闲":"休"}）</span>`).join("");
+      `<span class="badge ${g.status==="带团中"?"badge-orange live":g.status==="空闲"?"badge-green":"badge-gray"}"><span class="dot"></span>${g.name}（${t(GSS[g.status])}）</span>`).join("");
   }
   tbody.addEventListener("click", e => {
     const btn = e.target.closest(".ga-btn");
@@ -2346,7 +2758,7 @@ PAGE_INIT.guideAssign = page => {
     const tr = btn.closest("tr");
     const g = MOCK.groups.find(x => x.name === tr.dataset.g);
     const sel = tr.querySelector(".ga-sel").value;
-    if (!sel) return toast("请先选择导游", "error");
+    if (!sel) return toast(t('ga_selGuide'), "error");
     setBtnLoading(btn, true, "...");
     setTimeout(() => {
       const old = MOCK.guides.find(d => d.name === g.guide);
@@ -2354,7 +2766,7 @@ PAGE_INIT.guideAssign = page => {
       const nw = MOCK.guides.find(d => d.name === sel);
       nw.status = "带团中";
       g.guide = sel;
-      toast(`已为「${g.name}」分配导游 ${sel}`);
+      toast(t('ga_assigned', g.name, sel));
       render();
     }, 600);
   });
@@ -2366,24 +2778,24 @@ PAGE_INIT.guideAssign = page => {
    13. 宾馆住宿安排
 ============================================================ */
 PAGES.hotelAssign = meta => `
-  <div class="page-title">宾馆住宿安排</div>
-  <div class="page-desc">按团安排入住宾馆：选择团 → 挑选宾馆 → 填写房间数 → 提交订房单</div>
+  <div class="page-title">${t('ha_title')}</div>
+  <div class="page-desc">${t('ha_desc')}</div>
   <div class="card reveal" style="max-width:980px">
     <div class="form-grid">
-      <div class="field" id="hafGroup"><label>旅游团<span class="req">*</span></label>
-        <div class="input-wrap"><select id="haGroup"><option value="">请选择旅游团</option>
-          ${MOCK.groups.filter(g => g.status === "已成团").map(g => `<option value="${g.name}">${g.name}（${g.members} 人）</option>`).join("")}
+      <div class="field" id="hafGroup"><label>${t('ha_group')}<span class="req">*</span></label>
+        <div class="input-wrap"><select id="haGroup"><option value="">${t('ha_group')}</option>
+          ${MOCK.groups.filter(g => g.status === "已成团").map(g => `<option value="${g.name}">${g.name}（${g.members} ${t('dash_signups_unit')}）</option>`).join("")}
         </select></div>
-        <div class="msg">请选择旅游团</div></div>
-      <div class="field"><label>入住日期</label>
+        <div class="msg">${t('ha_group')}</div></div>
+      <div class="field"><label>${t('signup_kv_depart')}</label>
         <div class="input-wrap"><input id="haDate" type="date" readonly style="background:#F8FAFC"></div><div class="msg"></div></div>
-      <div class="field"><label>入住晚数</label>
+      <div class="field"><label>${t('route_days')}</label>
         <div class="input-wrap"><input id="haNights" type="number" readonly style="background:#F8FAFC"></div><div class="msg"></div></div>
-      <div class="field" id="hafRooms"><label>房间数<span class="req">*</span></label>
-        <div class="input-wrap"><input id="haRooms" type="number" min="1" placeholder="所需房间数"><span class="check" style="right:14px">✓</span></div>
-        <div class="msg">房间数无效或超过剩余房数</div></div>
+      <div class="field" id="hafRooms"><label>${t('ha_rooms')}<span class="req">*</span></label>
+        <div class="input-wrap"><input id="haRooms" type="number" min="1" placeholder="${t('ha_rooms')}"><span class="check" style="right:14px">✓</span></div>
+        <div class="msg">${t('ha_rooms')}</div></div>
     </div>
-    <p style="font-weight:700;margin:6px 0 12px">选择宾馆</p>
+    <p style="font-weight:700;margin:6px 0 12px">${t('ha_hotel')}</p>
     <div class="pick-grid" id="haHotels">
       ${MOCK.hotels.map(h => `
         <div class="pick-card" data-h="${h.name}">
@@ -2397,7 +2809,7 @@ PAGES.hotelAssign = meta => `
         </div>`).join("")}
     </div>
     <div style="display:flex;justify-content:flex-end;margin-top:20px">
-      <button class="btn btn-primary" id="haSubmit">提交订房单</button>
+      <button class="btn btn-primary" id="haSubmit">${t('ha_submit')}</button>
     </div>
   </div>`;
 
@@ -2421,7 +2833,7 @@ PAGE_INIT.hotelAssign = page => {
     let ok = true;
     ok = validateField($("#hafGroup", page), !!g) && ok;
     ok = validateField($("#hafRooms", page), rooms > 0 && (!hotel || rooms <= hotel.avail)) && ok;
-    if (!hotel) { toast("请选择一家宾馆", "error"); ok = false; }
+    if (!hotel) { toast(t('ha_hotel'), "error"); ok = false; }
     if (!ok) return;
     const nights = +$("#haNights", page).value || 1;
     const total = rooms * nights * hotel.price;
@@ -2433,16 +2845,16 @@ PAGE_INIT.hotelAssign = page => {
       setBtnLoading(btn, false);
       const card = $(`#haHotels .pick-card[data-h="${hotel.name}"]`, page);
       card.querySelector(".ha-avail").textContent = `剩 ${hotel.avail} 间`;
-      openModal({title:"🏨 订房单回执", hideFoot:true, body:`
+      openModal({title:"🏨 " + t('ha_submit'), hideFoot:true, body:`
         <table class="kv">
-          <tr><td>订单编号</td><td><b style="font-family:Consolas,monospace">DF${Date.now().toString().slice(-8)}</b></td></tr>
-          <tr><td>旅游团</td><td><b>${g.name}</b>（${g.members} 人）</td></tr>
-          <tr><td>宾馆</td><td>${hotel.name}（${hotel.roomType}）</td></tr>
-          <tr><td>入住日期</td><td>${g.depart} 起，共 ${nights} 晚</td></tr>
-          <tr><td>房间数</td><td>${rooms} 间</td></tr>
-          <tr><td>预估房费</td><td><b style="color:var(--accent-dark);font-size:16px">${fmtMoney(total)}</b></td></tr>
+          <tr><td>${t('signup_receiptId')}</td><td><b style="font-family:Consolas,monospace">DF${Date.now().toString().slice(-8)}</b></td></tr>
+          <tr><td>${t('ha_group')}</td><td><b>${g.name}</b>（${g.members} ${t('dash_signups_unit')}）</td></tr>
+          <tr><td>${t('ha_hotel')}</td><td>${hotel.name}（${hotel.roomType}）</td></tr>
+          <tr><td>${t('signup_kv_depart')}</td><td>${g.depart}，${t('ha_rooms')} ${rooms}</td></tr>
+          <tr><td>${t('ha_rooms')}</td><td>${rooms}</td></tr>
+          <tr><td>${t('st_fee')}</td><td><b style="color:var(--accent-dark);font-size:16px">${fmtMoney(total)}</b></td></tr>
         </table>`});
-      toast("订房单提交成功");
+      toast(t('ha_booked', g.name, hotel.name, rooms));
     }, 800);
   });
 };
@@ -2451,35 +2863,35 @@ PAGE_INIT.hotelAssign = page => {
    14. 团体投保
 ============================================================ */
 PAGES.insurance = meta => `
-  <div class="page-title">团体投保</div>
-  <div class="page-desc">为已成团的旅游团办理团体旅游保险</div>
+  <div class="page-title">${t('is_title')}</div>
+  <div class="page-desc">${t('is_desc')}</div>
   <div class="card reveal" style="max-width:880px">
     <div class="form-grid">
       <div class="field" id="insfGroup"><label>旅游团<span class="req">*</span></label>
         <div class="input-wrap"><select id="insGroup"><option value="">请选择已成团的旅游团</option>
           ${MOCK.groups.filter(g => g.status === "已成团").map(g => `<option value="${g.name}">${g.name}${g.insured?"（已投保）":""}</option>`).join("")}
         </select></div>
-        <div class="msg">请选择旅游团</div></div>
-      <div class="field" id="insfCo"><label>保险公司<span class="req">*</span></label>
-        <div class="input-wrap"><select id="insCo"><option value="">请选择保险公司</option>
+        <div class="msg">${t('ha_group')}</div></div>
+      <div class="field" id="insfCo"><label>${t('is_insure')}<span class="req">*</span></label>
+        <div class="input-wrap"><select id="insCo"><option value="">${t('is_insure')}</option>
           <option>中国人保</option><option>平安保险</option><option>太平洋保险</option><option>中国人寿</option>
         </select></div>
-        <div class="msg">请选择保险公司</div></div>
-      <div class="field" id="insfType"><label>险种<span class="req">*</span></label>
-        <div class="input-wrap"><select id="insType"><option value="">请选择险种</option>
+        <div class="msg">${t('is_insure')}</div></div>
+      <div class="field" id="insfType"><label>${t('is_insure')}<span class="req">*</span></label>
+        <div class="input-wrap"><select id="insType"><option value="">${t('is_insure')}</option>
           <option>旅游意外伤害险</option><option>综合旅行保障险</option><option>高原旅游专项险</option>
         </select></div>
-        <div class="msg">请选择险种</div></div>
-      <div class="field" id="insfAmt"><label>保额（万元/人）<span class="req">*</span></label>
-        <div class="input-wrap"><input id="insAmt" type="number" placeholder="如 50"><span class="check" style="right:14px">✓</span></div>
-        <div class="msg">请输入有效保额</div></div>
-      <div class="field" id="insfFee"><label>保费（元/人）<span class="req">*</span></label>
-        <div class="input-wrap"><input id="insFee" type="number" placeholder="如 30"><span class="check" style="right:14px">✓</span></div>
+        <div class="msg">${t('is_insure')}</div></div>
+      <div class="field" id="insfAmt"><label>${t('is_insure')}<span class="req">*</span></label>
+        <div class="input-wrap"><input id="insAmt" type="number" placeholder="50"><span class="check" style="right:14px">✓</span></div>
+        <div class="msg">${t('is_insure')}</div></div>
+      <div class="field" id="insfFee"><label>${t('is_insure')}<span class="req">*</span></label>
+        <div class="input-wrap"><input id="insFee" type="number" placeholder="30"><span class="check" style="right:14px">✓</span></div>
         <div class="msg">请输入有效保费</div></div>
     </div>
     <div id="insMembers" style="margin:4px 0 16px"><p style="color:var(--text-light);font-size:13px">选择旅游团后显示团员名单</p></div>
     <div style="display:flex;justify-content:flex-end">
-      <button class="btn btn-primary" id="insSubmit">提交投保单</button>
+      <button class="btn btn-primary" id="insSubmit">${t('is_insure')}</button>
     </div>
   </div>`;
 
@@ -2523,11 +2935,11 @@ PAGE_INIT.insurance = page => {
           <tr><td>旅游团</td><td><b>${g.name}</b>（${g.members} 人）</td></tr>
           <tr><td>保险公司</td><td>${co}</td></tr>
           <tr><td>险种</td><td>${type}</td></tr>
-          <tr><td>保额</td><td>${amt} 万元 / 人</td></tr>
+          <tr><td>${t('is_insure')}</td><td>${amt} ${t('insurance_amtUnit')}</td></tr>
           <tr><td>总保费</td><td><b style="color:var(--accent-dark);font-size:16px">${fmtMoney(fee * g.members)}</b>（${fee} 元 × ${g.members} 人）</td></tr>
           <tr><td>投保状态</td><td>${sBadge("已投保")}</td></tr>
         </table>`});
-      toast(`「${g.name}」投保成功`);
+      toast(t('is_insured', g.name));
     }, 900);
   });
 };
@@ -2546,8 +2958,8 @@ function calcFees(g){
 }
 
 PAGES.settlement = meta => `
-  <div class="page-title">团费结算</div>
-  <div class="page-desc">按团汇总费用（报名费 + 住宿费 + 保险费），跟踪收款状态并执行结算</div>
+  <div class="page-title">${t('settlement_title')}</div>
+  <div class="page-desc">${t('settlement_desc')}</div>
   <div class="stat-grid" id="stCards"></div>
   <div class="card table-card reveal">
     <div style="overflow-x:auto">
@@ -2596,18 +3008,16 @@ PAGE_INIT.settlement = page => {
     if (!btn) return;
     const g = MOCK.groups.find(x => x.name === btn.closest("tr").dataset.g);
     const f = calcFees(g);
-    openModal({title:"结算确认", okText:"确认结算", body:`
+    openModal({title:t('st_title'), okText:t('st_settle'), body:`
       <table class="kv">
-        <tr><td>旅游团</td><td><b>${g.name}</b>（${g.members} 人）</td></tr>
-        <tr><td>报名费</td><td>${fmtMoney(f.signup)}</td></tr>
-        <tr><td>住宿费</td><td>${fmtMoney(f.hotelFee)}</td></tr>
-        <tr><td>保险费</td><td>${fmtMoney(f.insFee)}</td></tr>
-        <tr><td>合计应收</td><td><b style="color:var(--accent-dark);font-size:17px">${fmtMoney(f.total)}</b></td></tr>
-      </table>
-      <p style="color:var(--text-light);font-size:12.5px;margin-top:8px">确认后该团费用状态将标记为「已收」。</p>`,
+        <tr><td>${t('ha_group')}</td><td><b>${g.name}</b>（${g.members} ${t('dash_signups_unit')}）</td></tr>
+        <tr><td>${t('st_fee')}</td><td>${fmtMoney(f.signup)}</td></tr>
+        <tr><td>${t('st_insuranceFee')}</td><td>${fmtMoney(f.insFee)}</td></tr>
+        <tr><td>${t('st_total')}</td><td><b style="color:var(--accent-dark);font-size:17px">${fmtMoney(f.total)}</b></td></tr>
+      </table>`,
       onOk(okBtn){
-        setBtnLoading(okBtn, true, "结算中...");
-        setTimeout(() => { g.paid = true; closeModal(); toast(`「${g.name}」结算完成，实收 ${fmtMoney(f.total)}`); render(); }, 800);
+        setBtnLoading(okBtn, true, t('btn_settling'));
+        setTimeout(() => { g.paid = true; closeModal(); toast(t('st_settled', g.name)); render(); }, 800);
       }
     });
   });
@@ -2680,11 +3090,11 @@ function exportCSV(filename, headers, rows){
    16. 按线路查班次
 ============================================================ */
 PAGES.qBatch = meta => `
-  <div class="page-title">按线路查班次</div>
-  <div class="page-desc">选择线路，查看其全部班次及报名人数趋势</div>
+  <div class="page-title">${t('qb_title')}</div>
+  <div class="page-desc">${t('qb_desc')}</div>
   <div class="card reveal" style="margin-bottom:16px">
     <div class="table-toolbar" style="padding:0">
-      <label style="font-weight:700">选择线路：</label>
+      <label style="font-weight:700">${t('qb_selRoute')}</label>
       <select class="filter-sel" id="qbRoute" style="min-width:220px">
         ${MOCK.routes.map(r => `<option value="${r.name}">${r.code}　${r.name}</option>`).join("")}
       </select>
@@ -2697,12 +3107,12 @@ PAGE_INIT.qBatch = page => {
     const route = $("#qbRoute", page).value;
     const bs = MOCK.batches.filter(b => b.route === route).sort((a,b) => a.depart.localeCompare(b.depart));
     $("#qbResult", page).innerHTML = !bs.length
-      ? `<div class="card placeholder-card"><div class="ph-icon">🔍</div><h3>该线路暂无班次</h3></div>`
+      ? `<div class="card placeholder-card"><div class="ph-icon">🔍</div><h3>${t('qb_noBatch')}</h3></div>`
       : `
       <div class="card table-card" style="margin-bottom:16px">
-        <div class="table-toolbar"><b style="color:var(--primary-dark)">班次列表（${bs.length} 个）</b></div>
+        <div class="table-toolbar"><b style="color:var(--primary-dark)">${t('qb_list', bs.length)}</b></div>
         <div style="overflow-x:auto"><table>
-          <thead><tr><th>班次号</th><th>出发日期</th><th>报名人数</th><th>状态</th></tr></thead>
+          <thead><tr><th>${t('qb_colNo')}</th><th>${t('qb_colDate')}</th><th>${t('qb_colCount')}</th><th>${t('qb_colStatus')}</th></tr></thead>
           <tbody>${bs.map((b,i) => `
             <tr class="row-in" style="animation-delay:${i*40}ms">
               <td><span class="badge badge-blue">${b.no}</span></td>
@@ -2715,7 +3125,7 @@ PAGE_INIT.qBatch = page => {
         </table></div>
       </div>
       <div class="card">
-        <b style="color:var(--primary-dark)">报名人数趋势</b>
+        <b style="color:var(--primary-dark)">${t('qb_trend')}</b>
         <div style="margin-top:12px">${lineChartSVG(bs.map(b => b.no), bs.map(b => b.count))}</div>
       </div>`;
   }
@@ -2727,20 +3137,20 @@ PAGE_INIT.qBatch = page => {
    17. 团员名单查询
 ============================================================ */
 PAGES.qMembers = meta => `
-  <div class="page-title">团员名单查询</div>
-  <div class="page-desc">按团名 / 班次 / 出发日期检索团员，并支持导出表格</div>
+  <div class="page-title">${t('qm_title')}</div>
+  <div class="page-desc">${t('qm_desc')}</div>
   <div class="card table-card reveal">
     <div class="table-toolbar">
-      <select class="filter-sel" id="qmGroup"><option value="">团名（全部）</option>
+      <select class="filter-sel" id="qmGroup"><option value="">${t('qm_colGroup')}（${t('dash_allStatus')}）</option>
         ${MOCK.groups.map(g => `<option>${g.name}</option>`).join("")}</select>
-      <select class="filter-sel" id="qmBatch"><option value="">班次（全部）</option>
+      <select class="filter-sel" id="qmBatch"><option value="">${t('qm_colBatch')}（${t('dash_allStatus')}）</option>
         ${MOCK.batches.map(b => `<option>${b.no}</option>`).join("")}</select>
-      <input type="date" class="filter-sel" id="qmDate" title="按出发日期筛选">
+      <input type="date" class="filter-sel" id="qmDate" title="${t('qm_colDepart')}">
       <div class="spacer"></div>
-      <button class="btn btn-blue" id="qmExport">⬇ 导出表格</button>
+      <button class="btn btn-blue" id="qmExport">${t('qm_export')}</button>
     </div>
     <div style="overflow-x:auto"><table>
-      <thead><tr><th>姓名</th><th>身份证号</th><th>联系方式</th><th>所属团</th><th>班次</th><th>出发日期</th><th>状态</th></tr></thead>
+      <thead><tr><th>${t('qm_colName')}</th><th>${t('qm_colId')}</th><th>${t('qm_colPhone')}</th><th>${t('qm_colGroup')}</th><th>${t('qm_colBatch')}</th><th>${t('qm_colDepart')}</th><th>${t('qm_colStatus')}</th></tr></thead>
       <tbody id="qmTbody"></tbody>
     </table></div>
     <div class="pager"><span class="pinfo" id="qmInfo"></span></div>
@@ -2767,21 +3177,21 @@ PAGE_INIT.qMembers = page => {
         <td>${x.g ? x.g.depart : "—"}</td>
         <td>${sBadge(x.status)}</td>
       </tr>`).join("")
-      : `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:34px">未找到符合条件的团员</td></tr>`;
-    $("#qmInfo", page).textContent = `共查询到 ${data.length} 名团员`;
+      : `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:34px">${t('qm_noResult')}</td></tr>`;
+    $("#qmInfo", page).textContent = t('qm_count', data.length);
   }
   ["qmGroup","qmBatch","qmDate"].forEach(id => $("#"+id, page).addEventListener("change", render));
   $("#qmExport", page).addEventListener("click", e => {
     const data = rows();
-    if (!data.length) return toast("当前结果为空，无可导出数据", "error");
+    if (!data.length) return toast(t('qm_emptyExport'), "error");
     const btn = e.currentTarget;
-    setBtnLoading(btn, true, "导出中...");
+    setBtnLoading(btn, true, t('btn_exporting'));
     setTimeout(() => {
       exportCSV(`团员名单_${new Date().toISOString().slice(0,10)}.csv`,
         ["姓名","身份证号","联系方式","所属团","班次","出发日期","状态"],
         data.map(x => [x.name, x.idcard, x.phone, x.group, x.batch, x.g ? x.g.depart : "", x.status]));
       setBtnLoading(btn, false);
-      toast(`已导出 ${data.length} 条团员记录`);
+      toast(t('qm_exported', data.length));
     }, 600);
   });
   skeletonRows(tbody, 7, 6);
@@ -2816,13 +3226,13 @@ function schedMap(){
 }
 
 PAGES.qGuide = meta => `
-  <div class="page-title">导游排班查询</div>
-  <div class="page-desc">日历视图展示导游排班；点击日期查看当天导游分配明细</div>
+  <div class="page-title">${t('qg_title')}</div>
+  <div class="page-desc">${t('qg_desc')}</div>
   <div class="card reveal">
     <div class="cal-head">
-      <button class="btn btn-ghost" id="calPrev" style="padding:6px 13px">‹ 上月</button>
+      <button class="btn btn-ghost" id="calPrev" style="padding:6px 13px">${t('cal_prev')}</button>
       <b id="calTitle"></b>
-      <button class="btn btn-ghost" id="calNext" style="padding:6px 13px">下月 ›</button>
+      <button class="btn btn-ghost" id="calNext" style="padding:6px 13px">${t('cal_next')}</button>
       <div class="spacer" style="flex:1"></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${Object.entries(GUIDE_COLORS).slice(0,5).map(([n,c]) => `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-light)"><i style="width:10px;height:10px;border-radius:3px;background:${c}"></i>${n}</span>`).join("")}
@@ -2838,16 +3248,17 @@ PAGE_INIT.qGuide = page => {
     $("#calTitle", page).textContent = `${y} 年 ${m} 月`;
     const first = new Date(y, m-1, 1).getDay();
     const days = new Date(y, m, 0).getDate();
-    let html = ["日","一","二","三","四","五","六"].map(w => `<div class="wd">周${w}</div>`).join("");
+    const weekDays = LANG==='en' ? t('cal_weekDays') : t('cal_weekDays');
+    let html = (Array.isArray(weekDays) ? weekDays : ["日","一","二","三","四","五","六"].map(w => "周"+w)).map(w => `<div class="wd">${w}</div>`).join("");
     for (let i = 0; i < first; i++) html += `<div class="cal-cell empty"></div>`;
     for (let d = 1; d <= days; d++) {
       const key = `${y}-${pad2(m)}-${pad2(d)}`;
       const list = map[key] || [];
       const isToday = key === "2026-06-13";
       html += `<div class="cal-cell ${isToday?"today":""}" data-date="${key}" style="animation-delay:${(first+d)*12}ms">
-        <div class="d">${d}${isToday?" · 今天":""}</div>
+        <div class="d">${d}${isToday?" · "+t('cal_today'):""}</div>
         ${list.slice(0,2).map(s => `<span class="cal-tag" style="background:${GUIDE_COLORS[s.guide]||"#7F8C9B"}">${s.guide} · ${s.group}</span>`).join("")}
-        ${list.length > 2 ? `<span class="cal-tag" style="background:#9DB0BE">+${list.length-2} 个排班</span>` : ""}
+        ${list.length > 2 ? `<span class="cal-tag" style="background:#9DB0BE">${t('cal_more', list.length-2)}</span>` : ""}
       </div>`;
     }
     $("#calGrid", page).innerHTML = html;
@@ -2858,11 +3269,11 @@ PAGE_INIT.qGuide = page => {
     const cell = e.target.closest(".cal-cell[data-date]");
     if (!cell) return;
     const key = cell.dataset.date, list = map[key] || [];
-    openModal({title:`${key} 导游排班`, hideFoot:true, body: list.length
+    openModal({title:t('cal_title', key), hideFoot:true, body: list.length
       ? `<table class="kv">${list.map(s => `
           <tr><td><span class="badge" style="background:${GUIDE_COLORS[s.guide]}22;color:${GUIDE_COLORS[s.guide]}"><span class="dot" style="background:${GUIDE_COLORS[s.guide]}"></span>${s.guide}</span></td>
-          <td><b>${s.group}</b>　<span style="color:var(--text-light);font-size:12.5px">${s.from} 起，共 ${s.days} 天</span></td></tr>`).join("")}</table>`
-      : `<p style="text-align:center;color:var(--text-light);padding:18px">当日无导游排班 🏖</p>`});
+          <td><b>${s.group}</b>　<span style="color:var(--text-light);font-size:12.5px">${s.from}，${s.days} ${t('route_days')}</span></td></tr>`).join("")}</table>`
+      : `<p style="text-align:center;color:var(--text-light);padding:18px">${t('cal_noSchedule')}</p>`});
   });
   render();
 };
@@ -2879,8 +3290,8 @@ const RECEPTIONS = [
   {hotel:"张家界武陵源宾馆", group:"张家界探险3团", in:"2026-06-25", out:"2026-06-29", rooms:12, rate:58},
 ];
 PAGES.qHotel = meta => `
-  <div class="page-title">宾馆接待查询</div>
-  <div class="page-desc">按时间段 / 宾馆名查询接待团队与入住率</div>
+  <div class="page-title">${t('qh_title')}</div>
+  <div class="page-desc">${t('qh_desc')}</div>
   <div class="card table-card reveal">
     <div class="table-toolbar">
       <select class="filter-sel" id="qhHotel"><option value="">宾馆（全部）</option>
@@ -2891,7 +3302,7 @@ PAGES.qHotel = meta => `
       <input type="date" class="filter-sel" id="qhTo" value="2026-06-30">
     </div>
     <div style="overflow-x:auto"><table>
-      <thead><tr><th>宾馆名称</th><th>接待团队</th><th>入住日期</th><th>离店日期</th><th>房间数</th><th>入住率</th></tr></thead>
+      <thead><tr><th>${t('qh_colHotel')}</th><th>${t('qh_colGroup')}</th><th>${t('qh_colCheckin')}</th><th>${t('qh_colCheckout')}</th><th>${t('qh_colRooms')}</th><th>${t('qh_colRate')}</th></tr></thead>
       <tbody id="qhTbody"></tbody>
     </table></div>
     <div class="pager"><span class="pinfo" id="qhInfo"></span></div>
@@ -2912,9 +3323,9 @@ PAGE_INIT.qHotel = page => {
           <div class="progress" style="flex:1"><i class="${r.rate>=80?"ok":r.rate>=50?"warn":"bad"}" style="--p:${r.rate/100}"></i></div>
           <b style="font-size:12.5px;color:${r.rate>=80?"var(--success)":r.rate>=50?"var(--warning)":"var(--danger)"}">${r.rate}%</b></div></td>
       </tr>`).join("")
-      : `<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:34px">该时间段无接待记录</td></tr>`;
+      : `<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:34px">${t('qh_noResult')}</td></tr>`;
     const avg = data.length ? Math.round(data.reduce((s,r) => s + r.rate, 0) / data.length) : 0;
-    $("#qhInfo", page).textContent = `共 ${data.length} 条接待记录，平均入住率 ${avg}%`;
+    $("#qhInfo", page).textContent = t('qh_info', data.length, avg);
   }
   ["qhHotel","qhFrom","qhTo"].forEach(id => $("#"+id, page).addEventListener("change", render));
   skeletonRows(tbody, 6, 5);
@@ -2942,14 +3353,14 @@ PAGES.qIncome = meta => {
   const rankMax = rank[0].income;
   const total = monthly.reduce((s,m) => s + m.value, 0);
   return `
-  <div class="page-title">收入统计</div>
-  <div class="page-desc">2026 年上半年经营收入仪表盘（示例数据）</div>
+  <div class="page-title">${t('qi_title')}</div>
+  <div class="page-desc">${t('qi_desc')}</div>
   <div class="stat-grid">
     ${[
-      {lbl:"上半年累计收入（万元）", v:+total.toFixed(1), d:1, bg:"linear-gradient(135deg,#1A6B8A,#2A8FB5)", icon:"money"},
-      {lbl:"月均收入（万元）",       v:+(total/6).toFixed(1), d:1, bg:"linear-gradient(135deg,#27AE60,#4FC97E)", icon:"chart"},
-      {lbl:"本月收入（万元）",       v:128.6, d:1, bg:"linear-gradient(135deg,#F0A500,#FFC23E)", icon:"dash"},
-      {lbl:"同比增长（%）",          v:23.8,  d:1, bg:"linear-gradient(135deg,#E67E22,#F39C4E)", icon:"flag"},
+      {lbl:t('qi_totalLabel'), v:+total.toFixed(1), d:1, bg:"linear-gradient(135deg,#1A6B8A,#2A8FB5)", icon:"money"},
+      {lbl:t('qi_avgLabel'),   v:+(total/6).toFixed(1), d:1, bg:"linear-gradient(135deg,#27AE60,#4FC97E)", icon:"chart"},
+      {lbl:t('qi_monthLabel'), v:128.6, d:1, bg:"linear-gradient(135deg,#F0A500,#FFC23E)", icon:"dash"},
+      {lbl:t('qi_yoyLabel'),    v:23.8,  d:1, bg:"linear-gradient(135deg,#E67E22,#F39C4E)", icon:"flag"},
     ].map((c,i) => `
     <div class="card stat-card reveal" style="transition-delay:${i*70}ms">
       <div class="stat-icon" style="background:${c.bg}">${navIcon(c.icon)}</div>
@@ -2958,11 +3369,11 @@ PAGES.qIncome = meta => {
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px">
     <div class="card reveal" style="grid-column:span 1">
-      <b style="color:var(--primary-dark)">月度收入（万元）</b>
+      <b style="color:var(--primary-dark)">${t('qi_monthlyTitle')}</b>
       <div style="margin-top:14px">${barChartHTML(monthly, " 万元")}</div>
     </div>
     <div class="card reveal">
-      <b style="color:var(--primary-dark)">线路收入占比</b>
+      <b style="color:var(--primary-dark)">${t('qi_pieTitle')}</b>
       <div class="pie-wrap">
         ${pieSVG(pieData)}
         <div class="legend">${pieData.map(d => `<div class="li"><i class="sw" style="background:${d.color}"></i>${d.label}<span class="lv">${d.value} 万</span></div>`).join("")}</div>
@@ -2970,7 +3381,7 @@ PAGES.qIncome = meta => {
     </div>
   </div>
   <div class="card reveal" style="margin-top:16px">
-    <b style="color:var(--primary-dark)">班次收入排行榜 TOP 5</b>
+    <b style="color:var(--primary-dark)">${t('qi_rankTitle')}</b>
     <div style="margin-top:8px">
       ${rank.map((r,i) => `
       <div class="rank-item" style="animation-delay:${i*80}ms">
