@@ -69,7 +69,7 @@ public class TouristServlet extends HttpServlet {
                     }
                 }
                 if (days == null) {
-                    throw new SQLException("报名失败：线路不存在", "45000");
+                    throw new SQLException("报名失败：线路不存在", "P0001");
                 }
 
                 // 2. 按身份证号查档，新游客自动生成编号并建档
@@ -86,7 +86,7 @@ public class TouristServlet extends HttpServlet {
                     int retries = 3;
                     while (true) {
                         try (PreparedStatement ps = DBUtil.prepare(c,
-                                "SELECT CONCAT('T', LPAD(IFNULL(MAX(CAST(SUBSTRING(tourist_no,2) AS UNSIGNED)),0)+1,7,'0')) "
+                                "SELECT CONCAT('T', LPAD(COALESCE(MAX(CAST(SUBSTRING(tourist_no,2) AS INTEGER)),0)+1,7,'0')) "
                                         + "FROM tourist");
                              ResultSet rs = ps.executeQuery()) {
                             rs.next();
@@ -101,7 +101,7 @@ public class TouristServlet extends HttpServlet {
                             ps.executeUpdate();
                             break;
                         } catch (SQLException e) {
-                            if (e.getErrorCode() == 1062 && --retries > 0) {
+                            if ("23505".equals(e.getSQLState()) && --retries > 0) {
                                 continue; // 主键冲突，重新生成编号
                             }
                             throw e;
@@ -115,14 +115,14 @@ public class TouristServlet extends HttpServlet {
                         touristNo, routeNo, departDate);
                      ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        throw new SQLException("报名失败：该游客已报名此线路此班期", "45000");
+                        throw new SQLException("报名失败：该游客已报名此线路此班期", "P0001");
                     }
                 }
 
                 // 4. 写入报名记录，回程日期 = 出发日期 + 天数 - 1
                 try (PreparedStatement ps = DBUtil.prepare(c,
                         "INSERT INTO registration (tourist_no, route_no, depart_date, return_date) "
-                                + "VALUES (?,?,?, DATE_ADD(?, INTERVAL ? DAY))",
+                                + "VALUES (?,?,?, CAST(? AS DATE) + CAST(? AS INTEGER))",
                         touristNo, routeNo, departDate, departDate, days - 1)) {
                     ps.executeUpdate();
                 }
@@ -142,12 +142,7 @@ public class TouristServlet extends HttpServlet {
     }
 
     private boolean checkRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String role = (String) req.getSession().getAttribute("role");
-        if (!"管理员".equals(role) && !"业务员".equals(role)) {
-            resp.sendError(403, "无权限访问");
-            return false;
-        }
-        return true;
+        return com.travel.util.Roles.requireRole(req, resp, com.travel.util.Roles.ADMIN, com.travel.util.Roles.AGENT);
     }
 
     private void list(HttpServletRequest req, HttpServletResponse resp)

@@ -1,39 +1,16 @@
 -- =====================================================================
--- 题目七：旅行社旅游系统
--- 02_indexes_views.sql  二级索引与视图
+-- 题目七：旅行社旅游系统 — PostgreSQL 索引与视图
 -- =====================================================================
-USE travel_agency;
-SET NAMES utf8mb4;
 
 -- ---------------------------------------------------------------
--- 二级索引（主键、UNIQUE、外键索引已自动创建，以下针对高频查询补充）
--- 用存储过程检查索引是否存在，避免重复创建报错
+-- 二级索引
 -- ---------------------------------------------------------------
-DELIMITER $$
-DROP PROCEDURE IF EXISTS create_index_if_not_exists$$
-CREATE PROCEDURE create_index_if_not_exists(
-    IN p_table VARCHAR(64), IN p_index VARCHAR(64), IN p_cols VARCHAR(255))
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.statistics
-        WHERE table_schema = DATABASE() AND table_name = p_table AND index_name = p_index LIMIT 1
-    ) THEN
-        SET @sql = CONCAT('CREATE INDEX ', p_index, ' ON ', p_table, ' (', p_cols, ')');
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-    END IF;
-END$$
-DELIMITER ;
-
-CALL create_index_if_not_exists('batch',        'idx_batch_route_date', 'route_no, depart_date');
-CALL create_index_if_not_exists('tourist',      'idx_tourist_name',     'name');
-CALL create_index_if_not_exists('guide',        'idx_guide_name',       'name');
-CALL create_index_if_not_exists('hotel',        'idx_hotel_city_star',  'city, star');
-CALL create_index_if_not_exists('tour_group',   'idx_group_batch',      'batch_no');
-CALL create_index_if_not_exists('registration', 'idx_reg_route_date',   'route_no, depart_date');
-
-DROP PROCEDURE IF EXISTS create_index_if_not_exists;
+CREATE INDEX IF NOT EXISTS idx_batch_route_date ON batch(route_no, depart_date);
+CREATE INDEX IF NOT EXISTS idx_tourist_name     ON tourist(name);
+CREATE INDEX IF NOT EXISTS idx_guide_name       ON guide(name);
+CREATE INDEX IF NOT EXISTS idx_hotel_city_star   ON hotel(city, star);
+CREATE INDEX IF NOT EXISTS idx_group_batch       ON tour_group(batch_no);
+CREATE INDEX IF NOT EXISTS idx_reg_route_date    ON registration(route_no, depart_date);
 
 -- ---------------------------------------------------------------
 -- 视图 1：班次完整信息（班次 + 线路 + 折后价）
@@ -69,7 +46,7 @@ SELECT g.group_no            AS 团号,
        i.policy_no           AS 保险单号,
        i.per_fee             AS 人均保险费,
        ROUND(b.price * b.discount * g.actual_people
-             + IFNULL(i.per_fee, 0) * g.actual_people, 2) AS 应收团费
+             + COALESCE(i.per_fee, 0) * g.actual_people, 2) AS 应收团费
 FROM tour_group g
 JOIN batch b ON b.batch_no = g.batch_no
 JOIN route r ON r.route_no = b.route_no

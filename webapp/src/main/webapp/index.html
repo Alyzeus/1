@@ -1086,8 +1086,15 @@ qIncome_desc:{zh:"经营收入仪表盘",en:"Revenue dashboard"},
 };
 function t(key,...args){
   let s = (I18N[key] && I18N[key][LANG]) ? I18N[key][LANG] : (I18N[key]?.zh || key);
-  args.forEach((a,i)=>s=s.replace('{'+i+'}',a));
+  args.forEach((a,i)=>s=s.replace('{'+i+'}',escHtml(a)));
   return s;
+}
+/** HTML 转义：将用户数据安全地插入 innerHTML（全局使用，消除 XSS） */
+function escHtml(s){
+  if (s === null || s === undefined) return '';
+  const div = document.createElement('div');
+  div.textContent = String(s);
+  return div.innerHTML;
 }
 let LANG = (localStorage.getItem('lang')||(navigator.language||'').split('-')[0]);
 
@@ -1152,7 +1159,11 @@ function toast(msg, type="success", dur=2200) {
   const icons = {success:"✓", error:"✕", info:"ℹ"};
   const el = document.createElement("div");
   el.className = `toast ${type}`;
-  el.innerHTML = `<b>${icons[type]||""}</b><span>${msg}</span>`;
+  const b = document.createElement('b');
+  b.textContent = icons[type] || '';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  el.appendChild(b); el.appendChild(span);
   $("#toastRoot").appendChild(el);
   setTimeout(() => { el.classList.add("out"); el.addEventListener("animationend", () => el.remove()); }, dur);
 }
@@ -1167,7 +1178,7 @@ function openModal({title, body, okText, danger=false, onOk=null, hideFoot=false
   if (!okText) okText = t('modal_defaultOk');
   modalOnOk = onOk;
   modalBox.innerHTML = `
-    <div class="modal-head"><h3>${title}</h3><button class="modal-close" data-close>✕</button></div>
+    <div class="modal-head"><h3>${escHtml(title)}</h3><button class="modal-close" data-close>✕</button></div>
     <div class="modal-body">${body}</div>
     ${hideFoot ? "" : `<div class="modal-foot">
       <button class="btn btn-ghost" data-close>${t('modal_defaultCancel')}</button>
@@ -1280,6 +1291,7 @@ $("#loginForm").addEventListener("submit", async e => {
     const d = await r.json();
     if (d.ok) {
       currentUser = { name: d.user, role: d.role, username: d.username };
+      csrfToken = d.csrf || '';
       toast(t('toast_login_ok'));
       enterApp();
     } else {
@@ -1300,6 +1312,7 @@ $("#loginForm").addEventListener("submit", async e => {
 ============================================================ */
 const API_BASE = "/api";
 
+let csrfToken = '';
 async function apiGet(path) {
   const r = await fetch(API_BASE + path);
   if (!r.ok) throw new Error("HTTP " + r.status);
@@ -1309,7 +1322,7 @@ async function apiGet(path) {
 async function apiPost(path, data) {
   const r = await fetch(API_BASE + path, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    headers: { "Content-Type": "application/x-www-form-urlencoded", "X-CSRF-Token": csrfToken },
     body: new URLSearchParams(data).toString()
   });
   if (!r.ok) throw new Error("HTTP " + r.status);
@@ -1375,11 +1388,12 @@ async function loadAllData() {
       MOCK.guides = guides.data.map(g => ({
         no: g.guide_no,
         name: g.name || "",
-        level: g.level || "初级",
-        phone: "",
+        level: g.glevel || "初级",
+        gender: g.gender || "男",
+        phone: g.phone || "",
         status: "空闲",
         guide_no: g.guide_no,
-        language: g.language
+        language: g.languages
       }));
     }
 
@@ -1392,7 +1406,7 @@ async function loadAllData() {
         price: h.price || 0,
         avail: 0,
         hotel_no: h.hotel_no,
-        stars: h.stars
+        star: h.star || 3
       }));
     }
 
@@ -1430,8 +1444,8 @@ async function loadAllData() {
         name: g.group_name || "",
         batch: g.batch_no || "",
         depart: g.depart_date ? g.depart_date.substring(0,10) : "",
-        members: g.actual_count || 0,
-        status: (g.actual_count || 0) >= 20 ? "已成团" : "未成团",
+        members: g.actual_people || 0,
+        status: (g.actual_people || 0) >= 20 ? "已成团" : "未成团",
         guide: "",
         hotel: "",
         insured: false,
@@ -1785,16 +1799,16 @@ const PAGE_INIT = {
       const slice = data.slice((cur-1)*PAGE_SIZE, cur*PAGE_SIZE);
       tbody.innerHTML = slice.length ? slice.map((r,i) => `
         <tr class="row-in" style="animation-delay:${i*40}ms">
-          <td style="color:var(--text-light)">${r.id}</td>
-          <td><b>${r.name}</b></td>
-          <td>${r.route}</td>
-          <td><span class="badge badge-blue">${r.batch}</span></td>
+          <td style="color:var(--text-light)">${escHtml(r.id)}</td>
+          <td><b>${escHtml(r.name)}</b></td>
+          <td>${escHtml(r.route)}</td>
+          <td><span class="badge badge-blue">${escHtml(r.batch)}</span></td>
           <td>¥ ${r.fee.toLocaleString()}</td>
           <td>${statusBadge(r.status)}</td>
           <td>
-            <button class="op-link" data-op="view" data-id="${r.id}">${t('crud_view')}</button>
-            <button class="op-link" data-op="edit" data-id="${r.id}">${t('crud_edit')}</button>
-            <button class="op-link danger" data-op="del" data-id="${r.id}">${t('crud_delete')}</button>
+            <button class="op-link" data-op="view" data-id="${escHtml(r.id)}">${t('crud_view')}</button>
+            <button class="op-link" data-op="edit" data-id="${escHtml(r.id)}">${t('crud_edit')}</button>
+            <button class="op-link danger" data-op="del" data-id="${escHtml(r.id)}">${t('crud_delete')}</button>
           </td>
         </tr>`).join("")
         : `<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:34px">${t('crud_noResult')}</td></tr>`;
@@ -1981,7 +1995,7 @@ const STATUS_KEY = {
 };
 function sBadge(s){
   const key = STATUS_KEY[s];
-  const display = key ? t(key) : s;
+  const display = key ? t(key) : escHtml(s);
   const c = (STATUS_COLOR[s] || "gray").split(" ");
   return `<span class="badge badge-${c[0]}${c[1] ? " live" : ""}"><span class="dot"></span>${display}</span>`;
 }
@@ -2042,6 +2056,8 @@ function crudFormModal(cfg, rec, after){
       };
 
       if (cfg.apiPath) {
+        // preSave 钩子：允许在发送前注入/转换字段值
+        if (cfg.preSave) cfg.preSave(vals, rec);
         // 将 SPA 的 MOCK 字段名映射为 API 期望的 DB 列名
         const apiVals = {};
         const fieldMap = cfg.apiFieldMap || {};
@@ -2107,7 +2123,7 @@ function registerCrud(id, cfg){
       const slice = data.slice((cur-1)*ps, cur*ps);
       tbody.innerHTML = slice.length ? slice.map((r,i) => `
         <tr class="row-in" style="animation-delay:${i*40}ms" data-idx="${cfg.data.indexOf(r)}">
-          ${cfg.columns.map(c => `<td>${c.render ? c.render(r) : r[c.key]}</td>`).join("")}
+          ${cfg.columns.map(c => `<td>${c.render ? c.render(r) : escHtml(r[c.key])}</td>`).join("")}
           <td>
             <button class="op-link" data-op="view">${t('crud_view')}</button>
             <button class="op-link" data-op="edit">${t('crud_edit')}</button>
@@ -2174,7 +2190,7 @@ registerCrud("users", {
     {key:"status", label:"状态", options:["启用","停用"]},
   ],
   columns:[
-    {key:"username", label:"用户名", render:r => `<b>${r.username}</b>`},
+    {key:"username", label:"用户名", render:r => `<b>${escHtml(r.username)}</b>`},
     {key:"realname", label:"姓名"},
     {key:"role",     label:"角色", render:r => `<span class="badge badge-blue">${r.role}</span>`},
     {key:"phone",    label:"联系电话"},
@@ -2199,15 +2215,19 @@ registerCrud("routes", {
   entity:"线路", desc:"维护旅游线路：编号、行程天数、主要景点与报价",
   data:MOCK.routes, searchKeys:["code","name","spots"], searchTip:"搜索线路编号 / 名称 / 景点...",
   apiPath:"/routes", idKey:"code", idParam:"route_no",
-  apiFieldMap: {code:"route_no", days:"days", spots:"main_spots"},
-  // name/price/status 为前端展示字段，DB 无对应列，不映射
+  apiFieldMap: {code:"route_no", start_place:"start_place", end_place:"end_place", days:"days", spots:"main_spots"},
+  preSave: (vals) => {
+    const parts = (vals.name || "").split("→");
+    vals.start_place = parts[0]?.trim() || "";
+    vals.end_place = parts[1]?.trim() || "";
+  },
   filters:[
     {key:"status", label:"状态", options:["在售","下架"]},
     {key:"days",   label:"天数", options:[3,4,5,6]},
   ],
   columns:[
     {key:"code",  label:"线路编号", render:r => `<span class="badge badge-blue">${r.code}</span>`},
-    {key:"name",  label:"线路名称", render:r => `<b>${r.name}</b>`},
+    {key:"name",  label:"线路名称", render:r => `<b>${escHtml(r.name)}</b>`},
     {key:"days",  label:"天数", render:r => `${r.days} 天`},
     {key:"spots", label:"主要景点", render:r => `<span style="white-space:normal;max-width:280px;display:inline-block">${r.spots}</span>`},
     {key:"price", label:"报价", render:r => `<b style="color:var(--accent-dark)">${fmtMoney(r.price)}</b>`},
@@ -2231,11 +2251,17 @@ registerCrud("batches", {
   entity:"班次", addLabel:"开设", desc:"按线路开设出团班次，跟踪报名人数（满员 50 人）",
   data:MOCK.batches, searchKeys:["no","route"], searchTip:"搜索班次号 / 线路...",
   apiPath:"/batches", idKey:"no", idParam:"batch_no",
-  apiFieldMap: {no:"batch_no", route:"route_no", depart:"depart_date", status:"status"},
+  apiFieldMap: {no:"batch_no", route_no:"route_no", depart:"depart_date", price:"price", discount:"discount"},
+  preSave: (vals) => {
+    const r = MOCK.routes.find(r => r.name === vals.route);
+    vals.route_no = r ? r.route_no || r.code : "";
+    if (!vals.price) vals.price = 1000;
+    if (!vals.discount) vals.discount = 1;
+  },
   filters:[{key:"status", label:"状态", options:["报名中","已满","已出发","已结束"]}],
   columns:[
     {key:"no",     label:"班次号", render:r => `<span class="badge badge-blue">${r.no}</span>`},
-    {key:"route",  label:"所属线路", render:r => `<b>${r.route}</b>`},
+    {key:"route",  label:"所属线路", render:r => `<b>${escHtml(r.route)}</b>`},
     {key:"depart", label:"出发日期"},
     {key:"count",  label:"当前人数", render:r => `
       <div style="display:flex;align-items:center;gap:9px;min-width:130px">
@@ -2248,9 +2274,11 @@ registerCrud("batches", {
     {key:"no",     label:"班次号", placeholder:"如 GL-0710"},
     {key:"route",  label:"所属线路", type:"select", options:() => MOCK.routes.filter(r => r.status==="在售").map(r => r.name)},
     {key:"depart", label:"出发日期", type:"date"},
+    {key:"price",  label:"报价（元/人）", type:"number"},
+    {key:"discount",label:"折扣率", type:"number"},
     {key:"status", label:"状态", type:"select", options:["报名中","已满","已出发","已结束"], default:"报名中"},
   ],
-  newRec:() => ({count:0}),
+  newRec:() => ({count:0, price:1000, discount:1}),
   nameOf:r => `班次「${r.no}」`,
 });
 
@@ -2261,24 +2289,26 @@ registerCrud("guides", {
   entity:"导游", desc:"导游人事档案：等级评定、联系方式与当前带团状态",
   data:MOCK.guides, searchKeys:["no","name","phone"], searchTip:"搜索工号 / 姓名...",
   apiPath:"/guides", idKey:"no", idParam:"guide_no",
-  apiFieldMap: {no:"guide_no", name:"name", level:"glevel", phone:"phone", status:"status"},
+  apiFieldMap: {no:"guide_no", name:"name", gender:"gender", level:"glevel", languages:"languages", phone:"phone"},
   filters:[
     {key:"level",  label:"等级", options:["初级","中级","高级","特级"]},
     {key:"status", label:"状态", options:["空闲","带团中","休假"]},
   ],
   columns:[
     {key:"no",    label:"工号", render:r => `<span class="badge badge-blue">${r.no}</span>`},
-    {key:"name",  label:"姓名", render:r => `<b>${r.name}</b>`},
+    {key:"name",  label:"姓名", render:r => `<b>${escHtml(r.name)}</b>`},
     {key:"level", label:"等级", render:r => `<span class="badge ${ {初级:"badge-gray",中级:"badge-blue",高级:"badge-green",特级:"badge-orange"}[r.level] }">${r.level}导游</span>`},
     {key:"phone", label:"联系方式"},
     {key:"status",label:"当前状态", render:r => sBadge(r.status)},
   ],
   form:[
-    {key:"no",    label:"工号", placeholder:"如 G008"},
-    {key:"name",  label:"姓名"},
-    {key:"level", label:"等级", type:"select", options:["初级","中级","高级","特级"]},
-    {key:"phone", label:"联系方式"},
-    {key:"status",label:"当前状态", type:"select", options:["空闲","带团中","休假"], default:"空闲"},
+    {key:"no",       label:"工号", placeholder:"如 G008"},
+    {key:"name",     label:"姓名"},
+    {key:"gender",   label:"性别", type:"select", options:["男","女"], default:"男"},
+    {key:"level",    label:"等级", type:"select", options:["初级","中级","高级","特级"]},
+    {key:"languages",label:"语种", placeholder:"如 普通话、英语"},
+    {key:"phone",    label:"联系方式"},
+    {key:"status",   label:"当前状态", type:"select", options:["空闲","带团中","休假"], default:"空闲"},
   ],
   nameOf:r => `导游「${r.no} ${r.name}」`,
 });
@@ -2289,11 +2319,11 @@ registerCrud("guides", {
 registerCrud("hotels", {
   entity:"宾馆", desc:"合作宾馆档案：房型、协议价与实时可用房数",
   data:MOCK.hotels, searchKeys:["name","addr","roomType"], searchTip:"搜索宾馆名 / 地址...",
-  apiPath:"/hotels", idKey:"name", idParam:"hotel_no",
-  apiFieldMap: {name:"hotel_name", addr:"city", roomType:"roomType", price:"price", avail:"avail"},
+  apiPath:"/hotels", idKey:"hotel_no", idParam:"hotel_no",
+  apiFieldMap: {hotel_no:"hotel_no", name:"hotel_name", addr:"city", star:"star", price:"price"},
   filters:[{key:"roomType", label:"房型", options:["标准双人间","大床房","海景标间","三人间"]}],
   columns:[
-    {key:"name",    label:"宾馆名称", render:r => `<b>${r.name}</b>`},
+    {key:"name",    label:"宾馆名称", render:r => `<b>${escHtml(r.name)}</b>`},
     {key:"addr",    label:"地址", render:r => `<span style="color:var(--text-light)">${r.addr}</span>`},
     {key:"roomType",label:"房型"},
     {key:"price",   label:"协议价/晚", render:r => `<b style="color:var(--accent-dark)">${fmtMoney(r.price)}</b>`},
@@ -2304,12 +2334,15 @@ registerCrud("hotels", {
         : `<span class="badge badge-green"><span class="dot"></span>${r.avail} 间</span>`},
   ],
   form:[
+    {key:"hotel_no",label:"宾馆编号", placeholder:"如 H00005"},
     {key:"name",    label:"宾馆名称"},
-    {key:"addr",    label:"地址"},
+    {key:"addr",    label:"所在城市"},
+    {key:"star",    label:"星级", type:"number"},
     {key:"roomType",label:"房型", type:"select", options:["标准双人间","大床房","海景标间","三人间"]},
     {key:"price",   label:"协议价（元/晚）", type:"number"},
     {key:"avail",   label:"可用房数", type:"number"},
   ],
+  newRec:() => ({star:3, avail:0}),
   nameOf:r => `宾馆「${r.name}」`,
 });
 
@@ -2319,14 +2352,14 @@ registerCrud("hotels", {
 registerCrud("tourists", {
   entity:"游客", desc:"游客基础档案与报名状态维护",
   data:MOCK.tourists, searchKeys:["name","idcard","phone","batch"], searchTip:"搜索姓名 / 身份证 / 班次...",
-  apiPath:"/tourists", idKey:"name", idParam:"tourist_no",
-  apiFieldMap: {name:"name", idcard:"id_card", phone:"phone", batch:"batch", status:"status"},
+  apiPath:"/tourists", idKey:"tourist_no", idParam:"tourist_no",
+  apiFieldMap: {tourist_no:"tourist_no", name:"name", idcard:"id_card", gender:"gender", birth_date:"birth_date", address:"address", phone:"phone"},
   filters:[
     {key:"status", label:"报名状态", options:["已报名","已入团","已退团"]},
     {key:"batch",  label:"班次", options:["GL-0615","YN-0618","HN-0620","XA-0622","ZJ-0625","GL-0701"]},
   ],
   columns:[
-    {key:"name",  label:"姓名", render:r => `<b>${r.name}</b>`},
+    {key:"name",  label:"姓名", render:r => `<b>${escHtml(r.name)}</b>`},
     {key:"idcard",label:"身份证号", render:r => `<span style="color:var(--text-light);font-family:Consolas,monospace">${r.idcard}</span>`},
     {key:"phone", label:"联系方式"},
     {key:"batch", label:"报名班次", render:r => `<span class="badge badge-blue">${r.batch}</span>`},
@@ -2334,11 +2367,15 @@ registerCrud("tourists", {
     {key:"status",label:"报名状态", render:r => sBadge(r.status)},
   ],
   form:[
-    {key:"name",  label:"姓名"},
-    {key:"idcard",label:"身份证号", validate:v => v.length === 18},
-    {key:"phone", label:"联系方式"},
-    {key:"batch", label:"报名班次", type:"select", options:() => MOCK.batches.filter(b => b.status==="报名中"||b.status==="已满").map(b => b.no)},
-    {key:"status",label:"报名状态", type:"select", options:["已报名","已入团","已退团"], default:"已报名"},
+    {key:"tourist_no",label:"游客编号", placeholder:"留空自动生成"},
+    {key:"name",      label:"姓名"},
+    {key:"idcard",    label:"身份证号", validate:v => v.length === 18},
+    {key:"gender",    label:"性别", type:"select", options:["男","女"]},
+    {key:"birth_date",label:"出生日期", type:"date"},
+    {key:"address",   label:"住址"},
+    {key:"phone",     label:"联系方式"},
+    {key:"batch",     label:"报名班次"},
+    {key:"status",    label:"报名状态", type:"select", options:["已报名","已入团","已退团"], default:"已报名"},
   ],
   newRec:() => ({group:""}),
   nameOf:r => `游客「${r.name}」档案`,

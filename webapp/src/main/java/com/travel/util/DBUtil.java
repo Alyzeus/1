@@ -13,18 +13,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 /**
- * 数据库连接与通用 JDBC 工具（阶段5：数据库连接模块）。
+ * 数据库连接与通用 JDBC 工具（HikariCP 连接池）。
  * 连接参数在 src/main/resources/db.properties 中配置。
  */
 public final class DBUtil {
 
     private static final Properties P = new Properties();
+    private static HikariDataSource ds;
 
     static {
         try (InputStream in = DBUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
             P.load(in);
-            Class.forName("com.mysql.cj.jdbc.Driver");
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(P.getProperty("jdbc.url"));
+            config.setUsername(P.getProperty("jdbc.user"));
+            config.setPassword(P.getProperty("jdbc.password"));
+            config.setMaximumPoolSize(10);
+            config.setMinimumIdle(2);
+            config.setConnectionTimeout(10000);
+            config.setIdleTimeout(300000);
+            config.setMaxLifetime(600000);
+            ds = new HikariDataSource(config);
         } catch (Exception e) {
             throw new ExceptionInInitializerError(e);
         }
@@ -34,8 +47,7 @@ public final class DBUtil {
     }
 
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(
-                P.getProperty("jdbc.url"), P.getProperty("jdbc.user"), P.getProperty("jdbc.password"));
+        return ds.getConnection();
     }
 
     /** 查询并把结果集转成 List&lt;Map&gt;，列名保留 SQL 中的别名（含中文） */
@@ -111,25 +123,21 @@ public final class DBUtil {
                 .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t");
     }
 
-    /** 把常见 SQL 异常翻译成友好的中文提示（阶段6：异常处理） */
+    /** 把常见 SQL 异常翻译成友好的中文提示 */
     public static String friendly(SQLException e) {
-        int code = e.getErrorCode();
-        if (code == 1062) {
+        String state = e.getSQLState();
+        if ("23505".equals(state)) {
             return "操作失败：主键或唯一约束冲突（该记录已存在）";
         }
-        if (code == 1451) {
+        if ("23503".equals(state)) {
             return "操作失败：该记录已被其他数据引用，禁止删除（外键约束）";
         }
-        if (code == 1452) {
-            return "操作失败：引用的主表记录不存在（外键约束）";
-        }
-        if (code == 3819) {
+        if ("23514".equals(state)) {
             return "操作失败：数据不满足 CHECK 约束（请检查取值范围）";
         }
-        if ("45000".equals(e.getSQLState()) || code == 1644) {
-            // 触发器 / 存储过程 SIGNAL 抛出的业务规则错误
+        if ("P0001".equals(state)) {
             return e.getMessage();
         }
-        return "数据库错误[" + code + "]：" + e.getMessage();
+        return "数据库错误[" + state + "]：" + e.getMessage();
     }
 }

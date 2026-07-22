@@ -13,8 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.travel.util.DBUtil;
+import com.travel.util.Roles;
 
-/** 线路管理：增、删、改、查（阶段6 CRUD 示范模块） */
+/** 线路管理：增、删、改、查 */
 @WebServlet("/route")
 public class RouteServlet extends HttpServlet {
 
@@ -47,8 +48,8 @@ public class RouteServlet extends HttpServlet {
             // 新增与修改共用：主键已存在则更新
             DBUtil.update(
                     "INSERT INTO route (route_no, start_place, end_place, days, main_spots) VALUES (?,?,?,?,?) "
-                            + "ON DUPLICATE KEY UPDATE start_place=VALUES(start_place), end_place=VALUES(end_place), "
-                            + "days=VALUES(days), main_spots=VALUES(main_spots)",
+                            + "ON CONFLICT (route_no) DO UPDATE SET start_place=EXCLUDED.start_place, end_place=EXCLUDED.end_place, "
+                            + "days=EXCLUDED.days, main_spots=EXCLUDED.main_spots",
                     req.getParameter("route_no"), req.getParameter("start_place"),
                     req.getParameter("end_place"), req.getParameter("days"), req.getParameter("main_spots"));
             req.setAttribute("msg", "保存成功");
@@ -58,14 +59,8 @@ public class RouteServlet extends HttpServlet {
         list(req, resp);
     }
 
-    /** 角色鉴权：管理员、业务员 */
     private boolean checkRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String role = (String) req.getSession().getAttribute("role");
-        if (!"管理员".equals(role) && !"业务员".equals(role)) {
-            resp.sendError(403, "无权限访问");
-            return false;
-        }
-        return true;
+        return Roles.requireRole(req, resp, Roles.ADMIN, Roles.AGENT);
     }
 
     private void list(HttpServletRequest req, HttpServletResponse resp)
@@ -73,12 +68,7 @@ public class RouteServlet extends HttpServlet {
         boolean json = "json".equals(req.getParameter("fmt"));
         try {
             String kw = req.getParameter("kw");
-            String sql = "SELECT route_no, start_place, end_place, days, main_spots, "
-                       + "route_no AS code, route_no AS route_no, start_place AS start_place, "
-                       + "end_place AS end_place, days AS days, main_spots AS spots, "
-                       + "days AS days FROM route";
-            // 精简查询：返回前端需要的字段
-            sql = "SELECT route_no, start_place, end_place, days, main_spots FROM route";
+            String sql = "SELECT route_no, start_place, end_place, days, main_spots FROM route";
             if (kw != null && !kw.trim().isEmpty()) {
                 sql += " WHERE start_place LIKE ? OR end_place LIKE ? OR main_spots LIKE ?";
                 String like = "%" + kw.trim() + "%";

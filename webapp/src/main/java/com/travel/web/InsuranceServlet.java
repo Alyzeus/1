@@ -44,12 +44,7 @@ public class InsuranceServlet extends HttpServlet {
     }
 
     private boolean checkRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String role = (String) req.getSession().getAttribute("role");
-        if (!"管理员".equals(role) && !"财务".equals(role)) {
-            resp.sendError(403, "无权限访问");
-            return false;
-        }
-        return true;
+        return com.travel.util.Roles.requireRole(req, resp, com.travel.util.Roles.ADMIN, com.travel.util.Roles.FINANCE);
     }
 
     private void list(HttpServletRequest req, HttpServletResponse resp)

@@ -1,4 +1,4 @@
-jdbc.url=jdbc:mysql://127.0.0.1:3306/travel_agency?useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-jdbc.user=root
-# TODO: 改成你本机 MySQL 的 root 密码
+jdbc.url=jdbc:postgresql://127.0.0.1:5432/travel_agency
+jdbc.user=postgres
+# TODO: 改成你本机 PostgreSQL 的 postgres 密码
 jdbc.password=你的密码

@@ -45,12 +45,7 @@ public class BatchServlet extends HttpServlet {
     }
 
     private boolean checkRole(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String role = (String) req.getSession().getAttribute("role");
-        if (!"管理员".equals(role) && !"业务员".equals(role) && !"调度员".equals(role)) {
-            resp.sendError(403, "无权限访问");
-            return false;
-        }
-        return true;
+        return com.travel.util.Roles.requireRole(req, resp, com.travel.util.Roles.ADMIN, com.travel.util.Roles.AGENT, com.travel.util.Roles.DISPATCHER);
     }
 
     private void list(HttpServletRequest req, HttpServletResponse resp)
