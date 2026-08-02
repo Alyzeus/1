@@ -798,6 +798,12 @@ form_edit:{zh:"编辑",en:"Edit"},
 form_submit:{zh:"提 交",en:"Submit"},
 crud_actions:{zh:"操作",en:"Actions"},
 crud_add:{zh:"新增{0}",en:"Add {0}"},
+route_entity:{zh:"线路",en:"Route"},
+batch_entity:{zh:"班次",en:"Batch"},
+guide_entity:{zh:"导游",en:"Guide"},
+hotel_entity:{zh:"宾馆",en:"Hotel"},
+tourist_entity:{zh:"游客",en:"Tourist"},
+users_entity:{zh:"用户",en:"User"},
 filter_all:{zh:"{0}（全部）",en:"{0} (All)"},
 ph_under_construction:{zh:"{0}页面待实现",en:"{0} page coming soon"},
 ph_uc_desc:{zh:"布局框架与设计风格确认后，将按计划逐页交付此模块。",en:"This module will be delivered as planned."},
@@ -2213,7 +2219,7 @@ function registerCrud(id, cfg){
           ${f.options.map(o => `<option>${o}</option>`).join("")}
         </select>`).join("")}
         <div class="spacer"></div>
-        <button class="btn btn-primary" data-r="add">＋ ${cfg.addLabel || t('crud_add', t(stem+'_title'))}</button>
+        <button class="btn btn-primary" data-r="add">＋ ${cfg.addLabel || t('crud_add', t(stem+'_entity'))}</button>
       </div>
       <div style="overflow-x:auto">
         <table>
