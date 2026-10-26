@@ -1,0 +1,10 @@
+interface:
+  display_name: GPT Visual Director
+  short_description: 用 GPT 完成视觉策划、图像生成、真实审图、定向修改与设计经验沉淀
+  default_prompt: 请使用 $gpt-visual-director，按我的需求完成视觉策划、生成与实际审图，并根据问题定向修改。
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  allow_implicit_invocation: true
